@@ -6,13 +6,9 @@ import { Navigation, LandingPage, Dashboard } from './components';
 
 class App extends Component {
   componentDidMount = () => {
-    // fetch('/test')
-    //   .then(data => {
-    //     return data.text();
-    //   })
-    //   .then(function(data) {
-    //     console.log(data); // this will be a string
-    //   });
+    fetch('/addMessage?text=cra-test').catch(error => {
+      console.log(error);
+    });
   };
   render() {
     return (
