@@ -6,13 +6,13 @@ import { Navigation, LandingPage, Dashboard } from './components';
 
 class App extends Component {
   componentDidMount = () => {
-    fetch('/test')
-      .then(data => {
-        return data.text();
-      })
-      .then(function(data) {
-        console.log(data); // this will be a string
-      });
+    // fetch('/test')
+    //   .then(data => {
+    //     return data.text();
+    //   })
+    //   .then(function(data) {
+    //     console.log(data); // this will be a string
+    //   });
   };
   render() {
     return (

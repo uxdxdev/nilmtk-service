@@ -26,18 +26,22 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: npm install --prefix ./functions
-      - run: npm install
+      - run:
+        name: Firebase functions npm install
+        command: npm install --prefix ./functions
+      - run:
+        name: CRA npm install
+        command: npm install
 
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      # deploy to firebase
       - run:
           name: CRA Build
           command: npm run build
       - run:
           name: Firebase Deploy
-          command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN" --project nilmtk-service --non-interactive # functions must be deleted manually in non-interactive mode
+          # functions must be deleted manually in non-interactive mode
+          command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN" --project nilmtk-service --non-interactive
