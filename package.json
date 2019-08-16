@@ -32,7 +32,6 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
     "firebase-tools": "^7.2.2"
   }
 }
