@@ -2,23 +2,9 @@ import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 // import logo from './logo.svg';
 import './App.css';
-import { Navigation, LandingPage, Dashboard } from './components';
-
-const NotFound = ({ location }) => (
-  <div>
-    <h3>
-      No match for <code>{location.pathname}</code>
-    </h3>
-  </div>
-);
+import { Navigation, LandingPage, Dashboard, NotFound } from './components';
 
 class App extends Component {
-  componentDidMount = () => {
-    fetch('/addMessage?text=cra-test-api').catch(error => {
-      console.log(error);
-    });
-  };
-
   render() {
     return (
       <>
