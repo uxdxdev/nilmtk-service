@@ -27,11 +27,11 @@ jobs:
             - v1-dependencies-
 
       - run:
-        name: Firebase functions npm install
-        command: npm install --prefix ./functions
+          name: Firebase functions npm install
+          command: npm install --prefix ./functions
       - run:
-        name: CRA npm install
-        command: npm install
+          name: CRA npm install
+          command: npm install
 
       - save_cache:
           paths:
