@@ -33,6 +33,6 @@ exports.makeUppercase = functions.database
     return snapshot.ref.parent.child('uppercase').set(uppercase);
   });
 
-exports.test = functions.https.onRequest(async (req, res) => {
-  res.send('test');
-});
+// exports.test = functions.https.onRequest(async (req, res) => {
+//   res.send('test');
+// });
