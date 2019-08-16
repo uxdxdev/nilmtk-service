@@ -15,7 +15,8 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
     .ref('/messages')
     .push({ original: original });
   // Redirect with 303 SEE OTHER to the URL of the pushed object in the Firebase console.
-  res.redirect(303, snapshot.ref.toString());
+  // res.redirect(303, snapshot.ref.toString());
+  res.send(snapshot.ref.toString());
 });
 
 // Listens for new messages added to /messages/:pushId/original and creates an
