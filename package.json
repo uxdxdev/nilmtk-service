@@ -13,9 +13,10 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "deploy": "firebase deploy",
     "deploy:site": "firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
-    "dev": "run-p --race dev:firebase dev:react",
+    "dev": "npm-run-all -p --race dev:firebase dev:react",
     "dev:firebase": "firebase serve -p 4000",
     "dev:react": "npm start"
   },
