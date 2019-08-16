@@ -32,3 +32,7 @@ exports.makeUppercase = functions.database
     // Setting an "uppercase" sibling in the Realtime Database returns a Promise.
     return snapshot.ref.parent.child('uppercase').set(uppercase);
   });
+
+exports.test = functions.https.onRequest(async (req, res) => {
+  res.send('test');
+});
