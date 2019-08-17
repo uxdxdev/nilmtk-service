@@ -8,16 +8,18 @@ class Dashboard extends React.Component {
     this.inputErrorMessage = React.createRef();
 
     this.state = {
-      messages: []
+      messages: [],
+      clientToken: 'null'
     };
   }
 
   async componentDidMount() {
     messaging
       .requestPermission()
-      .then(async function() {
+      .then(async () => {
         const token = await messaging.getToken();
         console.log(token);
+        this.setState({ clientToken: token });
       })
       .catch(function(err) {
         console.log('Unable to get permission to notify.', err);
@@ -50,11 +52,11 @@ class Dashboard extends React.Component {
     }
   };
   render() {
-    const { messages } = this.state;
+    const { messages, clientToken } = this.state;
     return (
       <>
         <p>This is the dashboard page.</p>
-
+        <p>{clientToken}</p>
         {/* <input
           type="text"
           ref={this.textInput}
