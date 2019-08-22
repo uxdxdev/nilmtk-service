@@ -8,8 +8,8 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/api/addMessage",
-        "function": "addMessage"
+        "source": "/api/report",
+        "function": "report"
       },
       {
         "source": "**",

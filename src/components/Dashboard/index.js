@@ -1,5 +1,45 @@
+/* eslint no-undef: "warn" */
 import React from 'react';
 import { messaging } from '../../init-fcm';
+
+const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+const uiConfig = {
+  callbacks: {
+    signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+      // User successfully signed in.
+      // Return type determines whether we continue the redirect automatically
+      // or whether we leave that to developer to handle.
+      // return true;
+
+      // login UI shows on the dashboard page when accessed so we don't want to
+      // redirect away from this page when successful.
+      return false;
+    },
+    uiShown: function() {
+      // The widget is rendered.
+      // Hide the loader.
+      document.getElementById('loader').style.display = 'none';
+    }
+  },
+  // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+  // signInFlow: 'popup',
+  // signInSuccessUrl: '/dashboard',
+  signInOptions: [
+    // Leave the lines as is for the providers you want to offer your users.
+    // firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+    // firebase.auth.GithubAuthProvider.PROVIDER_ID,
+    // eslint-disable-next-line no-undef
+    firebase.auth.EmailAuthProvider.PROVIDER_ID
+    // firebase.auth.PhoneAuthProvider.PROVIDER_ID
+  ]
+  // Terms of service url.
+  // tosUrl: '<your-tos-url>',
+  // Privacy policy url.
+  // privacyPolicyUrl: '<your-privacy-policy-url>'
+};
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -9,21 +49,39 @@ class Dashboard extends React.Component {
 
     this.state = {
       messages: [],
-      clientToken: 'null'
+      clientToken: 'null',
+      isSignedIn: undefined,
+      uid: undefined
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
+    ui.start('#firebaseui-auth-container', uiConfig);
+
+    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      const { uid } = user;
+      const { clientToken } = this.state;
+      if (uid !== undefined && clientToken !== undefined) {
+        firebase
+          .database()
+          .ref('/users/' + uid)
+          .set({ token: clientToken });
+        console.log('write to db');
+      }
+      this.setState({ isSignedIn: !!user });
+    });
+
     messaging
       .requestPermission()
       .then(async () => {
         const token = await messaging.getToken();
-        console.log(token);
         this.setState({ clientToken: token });
       })
       .catch(function(err) {
         console.log('Unable to get permission to notify.', err);
       });
+
+    // event listener for new push notifications
     navigator.serviceWorker.addEventListener('message', message => {
       console.log(message);
       const { data } = message;
@@ -35,13 +93,20 @@ class Dashboard extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    this.unregisterAuthObserver();
+  }
+
   sendMessage = () => {
     const textInput = this.textInput.current;
-    const inputErrorMessage = this.inputErrorMessage.current;
     if (!textInput.checkValidity()) {
-      inputErrorMessage.innerHTML = textInput.validationMessage;
+      this.inputErrorMessage.current.innerHTML = textInput.validationMessage;
     } else {
-      fetch(`/api/addMessage?text=${textInput.value}`)
+      // POST text to the API
+      fetch(`/api/report`, {
+        method: 'post',
+        body: JSON.stringify({ deviceId: 1234, text: textInput.value })
+      })
         .then(() => {
           // clear the text input field if sent successfully
           textInput.value = '';
@@ -51,20 +116,41 @@ class Dashboard extends React.Component {
         });
     }
   };
+
   render() {
     const { messages, clientToken } = this.state;
+    if (!this.state.isSignedIn) {
+      return (
+        <div>
+          <h1>My App</h1>
+          <p>Please sign-in:</p>
+          <div id="firebaseui-auth-container" />
+          <div id="loader">Loading...</div>
+        </div>
+      );
+    }
+
     return (
       <>
         <p>This is the dashboard page.</p>
+        <button
+          onClick={() => {
+            firebase.auth().signOut();
+            // redirect to landing page
+            window.location.href = '/';
+          }}
+        >
+          Sign-out
+        </button>
         <p>{clientToken}</p>
-        {/* <input
+        <input
           type="text"
           ref={this.textInput}
           required
-          pattern="[A-Za-z]{1,20}"
+          // pattern="[A-Za-z]{1,}"
         />
         <p ref={this.inputErrorMessage} />
-        <button onClick={this.sendMessage}>Send</button> */}
+        <button onClick={this.sendMessage}>Send</button>
         <ul>
           {messages.map((message, index) => (
             <li key={index}>
