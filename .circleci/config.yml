@@ -66,3 +66,10 @@ jobs:
         name: Firebase Deploy
         # functions must be deleted manually in non-interactive mode
         command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN" --project nilmtk-service --non-interactive
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
+    - test
+    - deploy
