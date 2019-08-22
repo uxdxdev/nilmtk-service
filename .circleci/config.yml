@@ -47,9 +47,9 @@ jobs:
           command: npm test
 
       - run:
-        name: Firebase Deploy
-        # functions must be deleted manually in non-interactive mode
-        command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN" --project nilmtk-service --non-interactive
+          name: Firebase Deploy
+          # functions must be deleted manually in non-interactive mode
+          command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN" --project nilmtk-service --non-interactive
   # test:
   #   steps:
   #     - checkout
