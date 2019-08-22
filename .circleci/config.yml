@@ -22,10 +22,10 @@ jobs:
             - v1-dependencies-
 
       - run:
-          name: Firebase functions npm install
+          name: Install > Firebase functions
           command: npm install --prefix ./functions
       - run:
-          name: CRA npm install
+          name: Install > CRA
           command: npm install
 
       - save_cache:
@@ -34,12 +34,17 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
 
       - run:
-          name: CRA Build
+          name: Build > CRA
           command: npm run build
 
       - run:
-          name: Test
-          command: npm test
+          name: Test > Firebase functions
+          command: npm test --prefix ./functions
+
+      # - run:
+      #     name: Test > CRA
+      #     command: npm test
+
       - run:
           name: Firebase Deploy
           # functions must be deleted manually in non-interactive mode
