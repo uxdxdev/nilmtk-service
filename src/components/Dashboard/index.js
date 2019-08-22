@@ -1,4 +1,4 @@
-/* eslint no-undef: "warn" */
+/* eslint-disable no-undef */
 import React from 'react';
 import { messaging } from '../../init-fcm';
 
