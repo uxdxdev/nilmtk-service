@@ -93,7 +93,7 @@ exports.register = functions.https.onRequest(async (req, res) => {
 });
 
 exports.notification = functions.database
-  .ref('/devices/{deviceId}')
+  .ref('/devices/{deviceId}/reports/{reportId}')
   .onWrite(async (change, context) => {
     const report = change.after.val();
     const { text } = report;
@@ -112,7 +112,7 @@ exports.notification = functions.database
     let payload = {
       notification: {
         title: 'You have a new report!',
-        body: text
+        body: text.val()
       }
     };
 
