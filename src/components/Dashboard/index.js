@@ -44,12 +44,16 @@ const uiConfig = {
 class Dashboard extends React.Component {
   constructor(props) {
     super(props);
-    this.textInput = React.createRef();
-    this.inputErrorMessage = React.createRef();
+    this.textInputRef = React.createRef();
+    this.textInputErrorMessageRef = React.createRef();
+
+    this.registerDeviceInputRef = React.createRef();
+    this.registerDeviceInputErrorMessageRef = React.createRef();
 
     this.state = {
-      messages: [],
-      clientToken: 'null',
+      messages: undefined,
+      reports: undefined,
+      clientToken: undefined,
       isSignedIn: undefined,
       uid: undefined
     };
@@ -58,32 +62,8 @@ class Dashboard extends React.Component {
   componentDidMount() {
     ui.start('#firebaseui-auth-container', uiConfig);
 
-    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      const { uid } = user;
-      const { clientToken } = this.state;
-      if (uid !== undefined && clientToken !== undefined) {
-        firebase
-          .database()
-          .ref('/users/' + uid)
-          .set({ token: clientToken });
-        console.log('write to db');
-      }
-      this.setState({ isSignedIn: !!user });
-    });
-
-    messaging
-      .requestPermission()
-      .then(async () => {
-        const token = await messaging.getToken();
-        this.setState({ clientToken: token });
-      })
-      .catch(function(err) {
-        console.log('Unable to get permission to notify.', err);
-      });
-
     // event listener for new push notifications
     navigator.serviceWorker.addEventListener('message', message => {
-      console.log(message);
       const { data } = message;
       const messageObject = data['firebase-messaging-msg-data'];
       const { notification } = messageObject;
@@ -91,21 +71,88 @@ class Dashboard extends React.Component {
       messages.push(notification);
       this.setState({ messages });
     });
+
+    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      // set the uid of the user in component state
+      if (user && user.uid) {
+        let { uid } = user;
+        this.setState({ uid });
+        // read reports for user from DB
+        this.fetchReports();
+      }
+
+      // set the user signed in status
+      this.setState({ isSignedIn: !!user });
+
+      // only ask for permissions if we are signed in and we don't have the
+      // client token
+      if (this.state.isSignedIn && this.state.clientToken === undefined) {
+        this.initFcm();
+      }
+    });
   }
+
+  initFcm = () => {
+    messaging
+      .requestPermission()
+      .then(async () => {
+        console.log('getting token...');
+        const token = await messaging.getToken();
+        console.log('token', token);
+
+        this.setState({ clientToken: token });
+        this.updateUserDetailsInDB();
+      })
+      .catch(err => {
+        console.log('Unable to get permission to notify.', err);
+      });
+  };
+
+  updateUserDetailsInDB = () => {
+    // update db with user details
+    const { uid, clientToken } = this.state;
+    if (uid !== undefined && clientToken !== undefined) {
+      firebase
+        .database()
+        .ref('/users/' + uid)
+        .update({ token: clientToken });
+      console.log('write to db');
+    }
+  };
+
+  fetchReports = async () => {
+    const { uid } = this.state;
+    if (uid) {
+      let reports = await fetch(`/api/report?userId=${uid}`)
+        .then(response => {
+          return response.json();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+
+      this.setState({ reports });
+    }
+  };
 
   componentWillUnmount() {
     this.unregisterAuthObserver();
   }
 
-  sendMessage = () => {
-    const textInput = this.textInput.current;
+  sendMessage = async () => {
+    const textInput = this.textInputRef.current;
     if (!textInput.checkValidity()) {
-      this.inputErrorMessage.current.innerHTML = textInput.validationMessage;
+      this.textInputErrorMessageRef.current.innerHTML =
+        textInput.validationMessage;
     } else {
       // POST text to the API
-      fetch(`/api/report`, {
+      await fetch(`/api/report`, {
         method: 'post',
-        body: JSON.stringify({ deviceId: 1234, text: textInput.value })
+        body: JSON.stringify({
+          deviceId: 1234,
+          text: textInput.value,
+          date: Date.now()
+        })
       })
         .then(() => {
           // clear the text input field if sent successfully
@@ -117,8 +164,29 @@ class Dashboard extends React.Component {
     }
   };
 
+  registerDevice = async () => {
+    const deviceIdInput = this.registerDeviceInputRef.current;
+    if (!deviceIdInput.checkValidity()) {
+      this.registerDeviceInputErrorMessageRef.current.innerHTML =
+        deviceIdInput.validationMessage;
+    } else {
+      const { uid } = this.state;
+      const deviceId = deviceIdInput.value;
+      if (uid && deviceId) {
+        await fetch(`/api/register`, {
+          method: 'post',
+          body: JSON.stringify({ deviceId, userId: uid })
+        })
+          .then(() => {
+            deviceIdInput.value = '';
+          })
+          .catch(error => console.log(error));
+      }
+    }
+  };
+
   render() {
-    const { messages, clientToken } = this.state;
+    const { messages, clientToken, reports } = this.state;
     if (!this.state.isSignedIn) {
       return (
         <div>
@@ -143,20 +211,41 @@ class Dashboard extends React.Component {
           Sign-out
         </button>
         <p>{clientToken}</p>
+
+        <h4>Register monitoring device</h4>
+        <input
+          type="number"
+          ref={this.registerDeviceInputRef}
+          required
+          placeholder="device id"
+        />
+        <button onClick={this.registerDevice}>Register</button>
+        <p ref={this.registerDeviceInputErrorMessageRef} />
+
+        <h4>Simulation for device sending report</h4>
         <input
           type="text"
-          ref={this.textInput}
+          ref={this.textInputRef}
           required
-          // pattern="[A-Za-z]{1,}"
+          placeholder="report text"
         />
-        <p ref={this.inputErrorMessage} />
         <button onClick={this.sendMessage}>Send</button>
+        <p ref={this.textInputErrorMessageRef} />
+
+        <h4>Device reports</h4>
         <ul>
-          {messages.map((message, index) => (
-            <li key={index}>
-              {message.title} {message.body}
-            </li>
-          ))}
+          {reports &&
+            reports.map((report, index) => <li key={index}>{report}</li>)}
+        </ul>
+
+        <h4>Push notifications</h4>
+        <ul>
+          {messages &&
+            messages.map((message, index) => (
+              <li key={index}>
+                {message.title} {message.body}
+              </li>
+            ))}
         </ul>
       </>
     );

@@ -4,10 +4,68 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-// Take the text parameter passed to this HTTP endpoint and insert it into the
-// Realtime Database under the path /messages/:pushId/original
-// POST
 exports.report = functions.https.onRequest(async (req, res) => {
+  // POST create new report
+  let { method } = req;
+  if (method === 'POST') {
+    let { body } = req;
+    let data = JSON.parse(body);
+    if (data) {
+      const { deviceId, text } = data;
+      if (deviceId && text) {
+        await admin
+          .database()
+          .ref('/devices/' + deviceId + '/reports')
+          .push({ text });
+
+        res.status(200).send('Report received');
+      }
+    } else {
+      res.status(422).send('Invalid data');
+    }
+  } else if (method === 'GET') {
+    let { query } = req;
+    let { userId } = query;
+    if (userId) {
+      let deviceObjects = await admin
+        .database()
+        .ref('/devices')
+        .orderByChild('registeredUser')
+        .equalTo(userId)
+        .once('value', snapshot => snapshot.val());
+
+      //
+      let payload = [];
+      snapshotToArray(deviceObjects)
+        .map(device => device.reports)
+        .forEach(reports => {
+          if (reports !== undefined) {
+            Object.values(reports).forEach(report => {
+              payload.push(report.text);
+            });
+          }
+        });
+
+      res.status(200).send(payload);
+    } else {
+      res.status(422).send('Invalid payload');
+    }
+  }
+});
+
+const snapshotToArray = snapshot => {
+  let returnArr = [];
+
+  snapshot.forEach(childSnapshot => {
+    let item = childSnapshot.val();
+    item.key = childSnapshot.key;
+    returnArr.push(item);
+  });
+
+  return returnArr;
+};
+
+exports.register = functions.https.onRequest(async (req, res) => {
   // check if this is a POST request
   if (req.method !== 'POST') {
     res.send(405, 'HTTP Method ' + req.method + ' not allowed');
@@ -18,42 +76,47 @@ exports.report = functions.https.onRequest(async (req, res) => {
     data = JSON.parse(req.body);
   }
 
+  const { deviceId, userId } = data;
+
   // check for valid data in request payload
-  if (data !== undefined && data.deviceId && data.text) {
-    console.log('Payload data correct');
-    // Grab the text parameter.
-    const deviceId = data.deviceId;
-    const text = data.text;
-
-    // Push the new message into the Realtime Database using the Firebase Admin SDK.
-    const snapshot = await admin
+  if (data && deviceId && userId) {
+    await admin
       .database()
-      .ref('/reports/' + deviceId)
-      .push({ text });
+      .ref('/devices/' + deviceId)
+      .update({ registeredUser: userId });
 
-    res.send(snapshot.ref.toString());
+    res.status(200).send('Device registered');
   } else {
     console.log(req.body.text);
-    res.send(422, 'Payload data missing');
+    res.status(422).send('Invalid payload');
   }
 });
 
-// Listens for new messages added to /messages/:pushId/original and creates an
-// uppercase version of the message to /messages/:pushId/uppercase
 exports.notification = functions.database
-  .ref('/reports/{deviceId}/{pushId}/text')
-  .onCreate((snapshot, context) => {
-    // Grab the current value of what was written to the Realtime Database.
-    const text = snapshot.val();
+  .ref('/devices/{deviceId}')
+  .onWrite(async (change, context) => {
+    const report = change.after.val();
+    const { text } = report;
 
-    // send push notification to user
+    let { deviceId } = context.params;
+    let userId = await admin
+      .database()
+      .ref(`/devices/${deviceId}/registeredUser`)
+      .once('value', snapshot => snapshot.val());
 
-    // console.log('Uppercasing', context.params.pushId, text);
-    const uppercase = text.toUpperCase();
-    // You must return a Promise when performing asynchronous tasks inside a Functions such as
-    // writing to the Firebase Realtime Database.
-    // Setting an "uppercase" sibling in the Realtime Database returns a Promise.
-    return snapshot.ref.parent.child('uppercase').set(uppercase);
+    let token = await admin
+      .database()
+      .ref(`/users/${userId.val()}/token`)
+      .once('value', snapshot => snapshot.val());
+
+    let payload = {
+      notification: {
+        title: 'You have a new report!',
+        body: text
+      }
+    };
+
+    return admin.messaging().sendToDevice(token.val(), payload);
   });
 
 // add new users to the database

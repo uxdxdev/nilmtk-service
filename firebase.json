@@ -12,9 +12,16 @@
         "function": "report"
       },
       {
+        "source": "/api/register",
+        "function": "register"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ]
+  },
+  "database": {
+    "rules": "database.rules.json"
   }
 }

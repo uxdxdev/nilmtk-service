@@ -1,6 +1,10 @@
 /* eslint-disable no-undef */
-importScripts('https://www.gstatic.com/firebasejs/6.3.3/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/6.3.3/firebase-messaging.js');
+// importScripts('https://www.gstatic.com/firebasejs/6.4.0/firebase-app.js');
+// importScripts('https://www.gstatic.com/firebasejs/6.4.0/firebase-messaging.js');
+
+importScripts('/__/firebase/6.4.0/firebase-app.js');
+importScripts('/__/firebase/6.4.0/firebase-messaging.js');
+
 firebase.initializeApp({
   // Project Settings => Add Firebase to your web app
   messagingSenderId: '1062407524656'
