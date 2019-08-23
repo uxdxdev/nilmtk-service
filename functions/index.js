@@ -109,10 +109,12 @@ exports.notification = functions.database
       .ref(`/users/${userId.val()}/token`)
       .once('value', snapshot => snapshot.val());
 
+    console.log(token.val(), text);
+
     let payload = {
       notification: {
         title: 'You have a new report!',
-        body: text.val()
+        body: text
       }
     };
 
