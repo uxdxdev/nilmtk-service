@@ -55,7 +55,10 @@ class Dashboard extends React.Component {
       reports: [],
       clientToken: undefined,
       isSignedIn: false,
-      uid: undefined
+      uid: undefined,
+
+      // temp
+      deviceId: undefined
     };
   }
 
@@ -143,10 +146,11 @@ class Dashboard extends React.Component {
         textInput.validationMessage;
     } else {
       // POST text to the API
+      const { deviceId } = this.state;
       await fetch(`/api/report`, {
         method: 'post',
         body: JSON.stringify({
-          deviceId: 1234,
+          deviceId,
           text: textInput.value,
           date: Date.now()
         })
@@ -176,6 +180,7 @@ class Dashboard extends React.Component {
         })
           .then(() => {
             deviceIdInput.value = '';
+            this.setState({ deviceId });
             this.fetchReports();
           })
           .catch(error => console.log(error));
@@ -184,7 +189,7 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const { messages, clientToken, reports } = this.state;
+    const { messages, clientToken, reports, deviceId } = this.state;
 
     if (!this.state.isSignedIn) {
       return (
@@ -221,16 +226,20 @@ class Dashboard extends React.Component {
         />
         <button onClick={this.registerDevice}>Register</button>
         <p ref={this.registerDeviceInputErrorMessageRef} />
-        <h4>Send report</h4>
-        <p>test deviceId: 1234</p>
-        <input
-          type="text"
-          ref={this.textInputRef}
-          required
-          placeholder="report text"
-        />
-        <button onClick={this.sendMessage}>Send</button>
-        <p ref={this.textInputErrorMessageRef} />
+        {deviceId && (
+          <>
+            <h4>Send report</h4>
+            <p>test deviceId: {deviceId}</p>
+            <input
+              type="text"
+              ref={this.textInputRef}
+              required
+              placeholder="report text"
+            />
+            <button onClick={this.sendMessage}>Send</button>
+            <p ref={this.textInputErrorMessageRef} />
+          </>
+        )}
         <h4>Device reports</h4>
         <button onClick={this.fetchReports}>Refresh</button>
         <ul>
