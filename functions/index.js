@@ -34,7 +34,6 @@ exports.report = functions.https.onRequest(async (req, res) => {
         .equalTo(userId)
         .once('value', snapshot => snapshot.val());
 
-      //
       let payload = [];
       snapshotToArray(deviceObjects)
         .map(device => device.reports)
@@ -108,8 +107,6 @@ exports.notification = functions.database
       .database()
       .ref(`/users/${userId.val()}/token`)
       .once('value', snapshot => snapshot.val());
-
-    console.log(token.val(), text);
 
     let payload = {
       notification: {

@@ -16,9 +16,8 @@
     "deploy": "firebase deploy",
     "deploy:site": "firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
-    "dev": "npm-run-all -p --race dev:emulators dev:react",
+    "dev": "npm-run-all -p --race dev:firebase dev:react",
     "dev:firebase": "GOOGLE_APPLICATION_CREDENTIALS='../nilmtk-service-firebase-adminsdk-98qzs-d84abd5c23.json' firebase serve -p 5000",
-    "dev:emulators": "firebase emulators:start",
     "dev:react": "npm start"
   },
   "eslintConfig": {

@@ -51,10 +51,10 @@ class Dashboard extends React.Component {
     this.registerDeviceInputErrorMessageRef = React.createRef();
 
     this.state = {
-      messages: undefined,
-      reports: undefined,
+      messages: [],
+      reports: [],
       clientToken: undefined,
-      isSignedIn: undefined,
+      isSignedIn: false,
       uid: undefined
     };
   }
@@ -67,7 +67,7 @@ class Dashboard extends React.Component {
       const { data } = message;
       const messageObject = data['firebase-messaging-msg-data'];
       const { notification } = messageObject;
-      const { messages } = this.state;
+      let { messages } = this.state;
       messages.push(notification);
       this.setState({ messages });
     });
@@ -77,19 +77,20 @@ class Dashboard extends React.Component {
       if (user && user.uid) {
         let { uid } = user;
         this.setState({ uid });
-        // read reports for user from DB
         this.fetchReports();
       }
 
       // set the user signed in status
       this.setState({ isSignedIn: !!user });
 
-      // only ask for permissions if we are signed in and we don't have the
-      // client token
       if (this.state.isSignedIn && this.state.clientToken === undefined) {
         this.initFcm();
       }
     });
+  }
+
+  componentWillUnmount() {
+    this.unregisterAuthObserver();
   }
 
   initFcm = () => {
@@ -135,10 +136,6 @@ class Dashboard extends React.Component {
     }
   };
 
-  componentWillUnmount() {
-    this.unregisterAuthObserver();
-  }
-
   sendMessage = async () => {
     const textInput = this.textInputRef.current;
     if (!textInput.checkValidity()) {
@@ -179,6 +176,7 @@ class Dashboard extends React.Component {
         })
           .then(() => {
             deviceIdInput.value = '';
+            this.fetchReports();
           })
           .catch(error => console.log(error));
       }
@@ -187,6 +185,7 @@ class Dashboard extends React.Component {
 
   render() {
     const { messages, clientToken, reports } = this.state;
+
     if (!this.state.isSignedIn) {
       return (
         <div>
@@ -210,9 +209,10 @@ class Dashboard extends React.Component {
         >
           Sign-out
         </button>
+        <h4>Service worker token</h4>
         <p>{clientToken}</p>
-
         <h4>Register monitoring device</h4>
+        <p>testing deviceId: 1234</p>
         <input
           type="number"
           ref={this.registerDeviceInputRef}
@@ -221,8 +221,8 @@ class Dashboard extends React.Component {
         />
         <button onClick={this.registerDevice}>Register</button>
         <p ref={this.registerDeviceInputErrorMessageRef} />
-
-        <h4>Simulation for device sending report</h4>
+        <h4>Send report</h4>
+        <p>test deviceId: 1234</p>
         <input
           type="text"
           ref={this.textInputRef}
@@ -231,14 +231,14 @@ class Dashboard extends React.Component {
         />
         <button onClick={this.sendMessage}>Send</button>
         <p ref={this.textInputErrorMessageRef} />
-
         <h4>Device reports</h4>
+        <button onClick={this.fetchReports}>Refresh</button>
         <ul>
           {reports &&
             reports.map((report, index) => <li key={index}>{report}</li>)}
         </ul>
-
         <h4>Push notifications</h4>
+        <p>Send report to receive notification</p>
         <ul>
           {messages &&
             messages.map((message, index) => (
