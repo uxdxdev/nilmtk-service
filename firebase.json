@@ -12,8 +12,8 @@
         "function": "report"
       },
       {
-        "source": "/api/register",
-        "function": "register"
+        "source": "/api/device",
+        "function": "device"
       },
       {
         "source": "**",

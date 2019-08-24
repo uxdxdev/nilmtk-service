@@ -23,6 +23,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
     } else {
       res.status(422).send('Invalid data');
     }
+    // GET fetch reports
   } else if (method === 'GET') {
     let { query } = req;
     let { userId } = query;
@@ -64,29 +65,46 @@ const snapshotToArray = snapshot => {
   return returnArr;
 };
 
-exports.register = functions.https.onRequest(async (req, res) => {
-  // check if this is a POST request
-  if (req.method !== 'POST') {
-    res.send(405, 'HTTP Method ' + req.method + ' not allowed');
-  }
+exports.device = functions.https.onRequest(async (req, res) => {
+  // POST register new device
+  let { method } = req;
+  if (method === 'POST') {
+    let { body } = req;
+    let data = JSON.parse(body);
+    if (data) {
+      const { deviceId, userId } = data;
+      if (deviceId && userId) {
+        await admin
+          .database()
+          .ref('/devices/' + deviceId)
+          .update({ registeredUser: userId });
 
-  let data = undefined;
-  if (req && req.body) {
-    data = JSON.parse(req.body);
-  }
+        res.status(200).send('Device registered');
+      } else {
+        res.status(422).send('Invalid payload');
+      }
+    } else {
+      res.status(422).send('Invalid payload');
+    }
+    // GET fetch registered devices
+  } else if (method === 'GET') {
+    let { query } = req;
+    let { userId } = query;
+    if (userId) {
+      console.log('fetching devices');
+      let deviceObjects = await admin
+        .database()
+        .ref('/devices')
+        .orderByChild('registeredUser')
+        .equalTo(userId)
+        .once('value', snapshot => snapshot.val());
 
-  const { deviceId, userId } = data;
-
-  // check for valid data in request payload
-  if (data && deviceId && userId) {
-    await admin
-      .database()
-      .ref('/devices/' + deviceId)
-      .update({ registeredUser: userId });
-
-    res.status(200).send('Device registered');
+      let payload = Object.keys(deviceObjects);
+      res.status(200).send(payload);
+    } else {
+      res.status(422).send('Invalid payload');
+    }
   } else {
-    console.log(req.body.text);
     res.status(422).send('Invalid payload');
   }
 });

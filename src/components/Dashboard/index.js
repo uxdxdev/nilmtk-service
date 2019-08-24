@@ -80,6 +80,7 @@ class Dashboard extends React.Component {
       if (user && user.uid) {
         let { uid } = user;
         this.setState({ uid });
+        this.fetchDevices();
         this.fetchReports();
       }
 
@@ -139,6 +140,21 @@ class Dashboard extends React.Component {
     }
   };
 
+  fetchDevices = async () => {
+    const { uid } = this.state;
+    if (uid) {
+      let devices = await fetch(`/api/device?userId=${uid}`)
+        .then(response => {
+          return response.json();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+
+      this.setState({ devices });
+    }
+  };
+
   sendMessage = async () => {
     const textInput = this.textInputRef.current;
     if (!textInput.checkValidity()) {
@@ -174,13 +190,14 @@ class Dashboard extends React.Component {
       const { uid } = this.state;
       const deviceId = deviceIdInput.value;
       if (uid && deviceId) {
-        await fetch(`/api/register`, {
+        await fetch(`/api/device`, {
           method: 'post',
           body: JSON.stringify({ deviceId, userId: uid })
         })
           .then(() => {
             deviceIdInput.value = '';
             this.setState({ deviceId });
+            this.fetchDevices();
             this.fetchReports();
           })
           .catch(error => console.log(error));
@@ -189,7 +206,7 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const { messages, clientToken, reports, deviceId } = this.state;
+    const { messages, clientToken, reports, deviceId, devices } = this.state;
 
     if (!this.state.isSignedIn) {
       return (
@@ -216,8 +233,12 @@ class Dashboard extends React.Component {
         </button>
         <h4>Service worker token</h4>
         <p>{clientToken}</p>
-        <h4>Register monitoring device</h4>
-        <p>testing deviceId: 1234</p>
+        <h4>Registered devices</h4>
+        <button onClick={this.fetchDevices}>Refresh</button>
+        <ul>
+          {devices &&
+            devices.map((device, index) => <li key={index}>{device}</li>)}
+        </ul>
         <input
           type="number"
           ref={this.registerDeviceInputRef}
@@ -240,7 +261,7 @@ class Dashboard extends React.Component {
             <p ref={this.textInputErrorMessageRef} />
           </>
         )}
-        <h4>Device reports</h4>
+        <h4>Reports</h4>
         <button onClick={this.fetchReports}>Refresh</button>
         <ul>
           {reports &&
