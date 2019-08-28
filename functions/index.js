@@ -28,12 +28,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
     let { query } = req;
     let { userId } = query;
     if (userId) {
-      let deviceObjects = await admin
-        .database()
-        .ref('/devices')
-        .orderByChild('registeredUser')
-        .equalTo(userId)
-        .once('value', snapshot => snapshot.val());
+      let deviceObjects = await fetchDevicesByUserId(userId);
 
       let payload = [];
       snapshotToArray(deviceObjects)
@@ -46,12 +41,22 @@ exports.report = functions.https.onRequest(async (req, res) => {
           }
         });
 
+      payload = payload.slice(-5);
       res.status(200).send(payload);
     } else {
       res.status(422).send('Invalid payload');
     }
   }
 });
+
+const fetchDevicesByUserId = userId => {
+  return admin
+    .database()
+    .ref('/devices')
+    .orderByChild('registeredUser')
+    .equalTo(userId)
+    .once('value', snapshot => snapshot.val());
+};
 
 const snapshotToArray = snapshot => {
   let returnArr = [];
@@ -91,15 +96,11 @@ exports.device = functions.https.onRequest(async (req, res) => {
     let { query } = req;
     let { userId } = query;
     if (userId) {
-      console.log('fetching devices');
-      let deviceObjects = await admin
-        .database()
-        .ref('/devices')
-        .orderByChild('registeredUser')
-        .equalTo(userId)
-        .once('value', snapshot => snapshot.val());
+      let deviceObjects = await fetchDevicesByUserId(userId);
 
-      let payload = Object.keys(deviceObjects);
+      let deviceObjectsArray = snapshotToArray(deviceObjects);
+      let payload = [];
+      deviceObjectsArray.forEach(entry => payload.push(entry.key));
       res.status(200).send(payload);
     } else {
       res.status(422).send('Invalid payload');
@@ -136,7 +137,6 @@ exports.notification = functions.database
     return admin.messaging().sendToDevice(token.val(), payload);
   });
 
-// add new users to the database
 exports.account = functions.auth.user().onCreate(event => {
   const { uid, providerData } = event;
   const email = providerData[0].email;

@@ -101,10 +101,7 @@ class Dashboard extends React.Component {
     messaging
       .requestPermission()
       .then(async () => {
-        console.log('getting token...');
         const token = await messaging.getToken();
-        console.log('token', token);
-
         this.setState({ clientToken: token });
         this.updateUserDetailsInDB();
       })
@@ -121,7 +118,6 @@ class Dashboard extends React.Component {
         .database()
         .ref('/users/' + uid)
         .update({ token: clientToken });
-      console.log('write to db');
     }
   };
 
@@ -151,7 +147,8 @@ class Dashboard extends React.Component {
           console.log(error);
         });
 
-      this.setState({ devices });
+      let deviceId = devices[0];
+      this.setState({ devices, deviceId });
     }
   };
 
