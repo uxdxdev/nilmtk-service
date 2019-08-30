@@ -152,7 +152,7 @@ class Dashboard extends React.Component {
     }
   };
 
-  sendMessage = async () => {
+  sendReport = async () => {
     const textInput = this.textInputRef.current;
     if (!textInput.checkValidity()) {
       this.textInputErrorMessageRef.current.innerHTML =
@@ -254,7 +254,7 @@ class Dashboard extends React.Component {
               required
               placeholder="report text"
             />
-            <button onClick={this.sendMessage}>Send</button>
+            <button onClick={this.sendReport}>Send</button>
             <p ref={this.textInputErrorMessageRef} />
           </>
         )}

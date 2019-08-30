@@ -8,8 +8,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
   // POST create new report
   let { method } = req;
   if (method === 'POST') {
-    let { body } = req;
-    let data = JSON.parse(body);
+    let { body: data } = req;
     if (data) {
       const { deviceId, text } = data;
       if (deviceId && text) {
