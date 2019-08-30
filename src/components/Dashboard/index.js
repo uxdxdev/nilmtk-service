@@ -152,32 +152,6 @@ class Dashboard extends React.Component {
     }
   };
 
-  sendReport = async () => {
-    const textInput = this.textInputRef.current;
-    if (!textInput.checkValidity()) {
-      this.textInputErrorMessageRef.current.innerHTML =
-        textInput.validationMessage;
-    } else {
-      // POST text to the API
-      const { deviceId } = this.state;
-      await fetch(`/api/report`, {
-        method: 'post',
-        body: JSON.stringify({
-          deviceId,
-          text: textInput.value,
-          date: Date.now()
-        })
-      })
-        .then(() => {
-          // clear the text input field if sent successfully
-          textInput.value = '';
-        })
-        .catch(error => {
-          console.log(error);
-        });
-    }
-  };
-
   registerDevice = async () => {
     const deviceIdInput = this.registerDeviceInputRef.current;
     if (!deviceIdInput.checkValidity()) {
@@ -244,20 +218,7 @@ class Dashboard extends React.Component {
         />
         <button onClick={this.registerDevice}>Register</button>
         <p ref={this.registerDeviceInputErrorMessageRef} />
-        {deviceId && (
-          <>
-            <h4>Send report</h4>
-            <p>test deviceId: {deviceId}</p>
-            <input
-              type="text"
-              ref={this.textInputRef}
-              required
-              placeholder="report text"
-            />
-            <button onClick={this.sendReport}>Send</button>
-            <p ref={this.textInputErrorMessageRef} />
-          </>
-        )}
+
         <h4>Reports</h4>
         <button onClick={this.fetchReports}>Refresh</button>
         <ul>
