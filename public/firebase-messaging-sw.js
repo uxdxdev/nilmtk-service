@@ -5,28 +5,23 @@ importScripts('/__/firebase/init.js');
 
 const messaging = firebase.messaging();
 
-// messaging.setBackgroundMessageHandler(payload => {
-//   const promiseChain = clients
-//     .matchAll({
-//       type: 'window',
-//       includeUncontrolled: true
-//     })
-//     .then(windowClients => {
-//       for (let i = 0; i < windowClients.length; i++) {
-//         const windowClient = windowClients[i];
-//         windowClient.postMessage(payload);
-//       }
-//     })
-//     .then(() => {
-//       return registration.showNotification('my notification title');
-//     });
-//   return promiseChain;
-// });
+messaging.setBackgroundMessageHandler(payload => {
+  console.log('Handling background message ', payload);
+  const { title, body, icon, link } = payload;
+  const notificationOptions = {
+    body,
+    icon,
+    data: link
+  };
+
+  // eslint-disable-next-line no-restricted-globals
+  return self.registration.showNotification(title, notificationOptions);
+});
 
 // eslint-disable-next-line no-restricted-globals
 self.addEventListener('notificationclick', event => {
-  if (event.action) {
-    clients.openWindow(event.action);
-  }
+  console.log('notificationclick', event);
   event.notification.close();
+  // eslint-disable-next-line no-restricted-globals
+  event.waitUntil(self.clients.openWindow(event.notification.data));
 });

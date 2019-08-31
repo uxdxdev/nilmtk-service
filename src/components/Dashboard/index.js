@@ -1,5 +1,5 @@
 import React from 'react';
-import { messaging } from '../../firebase';
+import { messaging } from '../../firebaseUtils';
 
 // eslint-disable-next-line no-undef
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -62,13 +62,29 @@ class Dashboard extends React.Component {
   componentDidMount() {
     ui.start('#firebaseui-auth-container', uiConfig);
 
-    navigator.serviceWorker.addEventListener('message', message => {
-      const { data } = message;
-      const messageObject = data['firebase-messaging-msg-data'];
-      const { notification } = messageObject;
+    // event listener for push notifications
+    navigator.serviceWorker.addEventListener('message', payload => {
+      const { data: payloadData } = payload;
+      const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
+      const { data } = firebaseMessageData;
+      console.log(data);
+      const { title, body, icon, link } = data;
+
+      // display in UI
       let { messages } = this.state;
-      messages.push(notification);
+      messages.push({ title, body, icon, link });
       this.setState({ messages });
+
+      // show notification when page is in focus
+      const notificationOptions = {
+        body,
+        icon,
+        data: link
+      };
+
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, notificationOptions);
+      });
     });
 
     // eslint-disable-next-line no-undef
