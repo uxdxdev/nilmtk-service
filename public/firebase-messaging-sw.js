@@ -5,23 +5,23 @@ importScripts('/__/firebase/init.js');
 
 const messaging = firebase.messaging();
 
-messaging.setBackgroundMessageHandler(payload => {
-  const promiseChain = clients
-    .matchAll({
-      type: 'window',
-      includeUncontrolled: true
-    })
-    .then(windowClients => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const windowClient = windowClients[i];
-        windowClient.postMessage(payload);
-      }
-    })
-    .then(() => {
-      return registration.showNotification('my notification title');
-    });
-  return promiseChain;
-});
+// messaging.setBackgroundMessageHandler(payload => {
+//   const promiseChain = clients
+//     .matchAll({
+//       type: 'window',
+//       includeUncontrolled: true
+//     })
+//     .then(windowClients => {
+//       for (let i = 0; i < windowClients.length; i++) {
+//         const windowClient = windowClients[i];
+//         windowClient.postMessage(payload);
+//       }
+//     })
+//     .then(() => {
+//       return registration.showNotification('my notification title');
+//     });
+//   return promiseChain;
+// });
 
 // eslint-disable-next-line no-restricted-globals
 self.addEventListener('notificationclick', event => {
