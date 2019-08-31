@@ -55,7 +55,10 @@ class Dashboard extends React.Component {
       reports: [],
       clientToken: undefined,
       isSignedIn: false,
-      uid: undefined
+      uid: undefined,
+
+      // temp
+      notificationOptions: undefined
     };
   }
 
@@ -83,7 +86,10 @@ class Dashboard extends React.Component {
         data: link
       };
 
+      this.setState({ notificationOptions });
+
       navigator.serviceWorker.ready.then(registration => {
+        console.log('registration', registration);
         registration.showNotification(title, notificationOptions);
       });
     });
@@ -192,7 +198,13 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const { messages, clientToken, reports, devices } = this.state;
+    const {
+      messages,
+      clientToken,
+      reports,
+      devices,
+      notificationOptions
+    } = this.state;
 
     if (!this.state.isSignedIn) {
       return (
@@ -218,6 +230,7 @@ class Dashboard extends React.Component {
         >
           Sign-out
         </button>
+        <p>{JSON.stringify(notificationOptions)}</p>
         <h4>Service worker token</h4>
         <p>{clientToken}</p>
         <h4>Registered devices</h4>
