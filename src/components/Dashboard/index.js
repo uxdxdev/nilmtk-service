@@ -64,10 +64,11 @@ class Dashboard extends React.Component {
 
     // event listener for push notifications
     navigator.serviceWorker.addEventListener('message', payload => {
+      console.log('PWA message listener', payload);
       const { data: payloadData } = payload;
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
-      console.log(data);
+
       const { title, body, icon, link } = data;
 
       // display in UI
