@@ -83,7 +83,8 @@ class Dashboard extends React.Component {
       const notificationOptions = {
         body,
         icon,
-        data: link
+        data: link,
+        click_action: link
       };
 
       this.setState({ notificationOptions });
