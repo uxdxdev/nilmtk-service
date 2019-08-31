@@ -67,7 +67,6 @@ class Dashboard extends React.Component {
 
     // event listener for push notifications
     navigator.serviceWorker.addEventListener('message', payload => {
-      console.log('PWA message listener', payload);
       const { data: payloadData } = payload;
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
@@ -83,14 +82,12 @@ class Dashboard extends React.Component {
       const notificationOptions = {
         body,
         icon,
-        data: link,
-        click_action: link
+        data: link
       };
 
       this.setState({ notificationOptions });
 
       navigator.serviceWorker.ready.then(registration => {
-        console.log('registration', registration);
         registration.showNotification(title, notificationOptions);
       });
     });
@@ -151,7 +148,7 @@ class Dashboard extends React.Component {
           return response.json();
         })
         .catch(error => {
-          console.log(error);
+          console.log('fetchReports failed', error);
         });
 
       this.setState({ reports });
@@ -166,7 +163,7 @@ class Dashboard extends React.Component {
           return response.json();
         })
         .catch(error => {
-          console.log(error);
+          console.log('fetchDevices failed', error);
         });
 
       let deviceId = devices[0];

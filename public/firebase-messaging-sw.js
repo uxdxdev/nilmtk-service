@@ -6,7 +6,6 @@ importScripts('/__/firebase/init.js');
 const messaging = firebase.messaging();
 
 messaging.setBackgroundMessageHandler(payload => {
-  console.log('Handling background message ', payload);
   const { data } = payload;
   const { title, body, icon, link } = data;
   const notificationOptions = {
@@ -21,7 +20,6 @@ messaging.setBackgroundMessageHandler(payload => {
 
 // eslint-disable-next-line no-restricted-globals
 self.addEventListener('notificationclick', event => {
-  console.log('notificationclick', event);
   event.notification.close();
   // eslint-disable-next-line no-restricted-globals
   event.waitUntil(self.clients.openWindow(event.notification.data));

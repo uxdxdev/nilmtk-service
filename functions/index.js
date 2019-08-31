@@ -127,9 +127,14 @@ exports.notification = functions.database
       .once('value', snapshot => snapshot.val());
 
     let payload = {
-      notification: {
-        title: 'You have a new report!',
-        body: text
+      message: {
+        token,
+        data: {
+          title: 'Consumo',
+          body: text,
+          icon: './favicon.ico',
+          link: 'https://nilmtk-service.firebaseapp.com/dashboard'
+        }
       }
     };
 
