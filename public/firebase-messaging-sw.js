@@ -1,17 +1,11 @@
 /* eslint-disable no-undef */
-// importScripts('https://www.gstatic.com/firebasejs/6.4.0/firebase-app.js');
-// importScripts('https://www.gstatic.com/firebasejs/6.4.0/firebase-messaging.js');
-
 importScripts('/__/firebase/6.4.0/firebase-app.js');
 importScripts('/__/firebase/6.4.0/firebase-messaging.js');
-
-firebase.initializeApp({
-  // Project Settings => Add Firebase to your web app
-  messagingSenderId: '1062407524656'
-});
+importScripts('/__/firebase/init.js');
 
 const messaging = firebase.messaging();
-messaging.setBackgroundMessageHandler(function(payload) {
+
+messaging.setBackgroundMessageHandler(payload => {
   const promiseChain = clients
     .matchAll({
       type: 'window',
@@ -28,8 +22,11 @@ messaging.setBackgroundMessageHandler(function(payload) {
     });
   return promiseChain;
 });
+
 // eslint-disable-next-line no-restricted-globals
-self.addEventListener('notificationclick', function(event) {
-  // do what you want
-  // ...
+self.addEventListener('notificationclick', event => {
+  if (event.action) {
+    clients.openWindow(event.action);
+  }
+  event.notification.close();
 });

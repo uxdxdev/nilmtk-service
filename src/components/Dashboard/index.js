@@ -1,7 +1,7 @@
-/* eslint-disable no-undef */
 import React from 'react';
-import { messaging } from '../../init-fcm';
+import { messaging } from '../../firebase';
 
+// eslint-disable-next-line no-undef
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 
 const uiConfig = {
@@ -55,17 +55,13 @@ class Dashboard extends React.Component {
       reports: [],
       clientToken: undefined,
       isSignedIn: false,
-      uid: undefined,
-
-      // temp
-      deviceId: undefined
+      uid: undefined
     };
   }
 
   componentDidMount() {
     ui.start('#firebaseui-auth-container', uiConfig);
 
-    // event listener for new push notifications
     navigator.serviceWorker.addEventListener('message', message => {
       const { data } = message;
       const messageObject = data['firebase-messaging-msg-data'];
@@ -75,6 +71,7 @@ class Dashboard extends React.Component {
       this.setState({ messages });
     });
 
+    // eslint-disable-next-line no-undef
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
       // set the uid of the user in component state
       if (user && user.uid) {
@@ -114,6 +111,7 @@ class Dashboard extends React.Component {
     // update db with user details
     const { uid, clientToken } = this.state;
     if (uid !== undefined && clientToken !== undefined) {
+      // eslint-disable-next-line no-undef
       firebase
         .database()
         .ref('/users/' + uid)
@@ -177,7 +175,7 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const { messages, clientToken, reports, deviceId, devices } = this.state;
+    const { messages, clientToken, reports, devices } = this.state;
 
     if (!this.state.isSignedIn) {
       return (
@@ -195,6 +193,7 @@ class Dashboard extends React.Component {
         <p>This is the dashboard page.</p>
         <button
           onClick={() => {
+            // eslint-disable-next-line no-undef
             firebase.auth().signOut();
             // redirect to landing page
             window.location.href = '/';
