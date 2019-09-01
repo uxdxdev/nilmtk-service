@@ -55,10 +55,7 @@ class Dashboard extends React.Component {
       reports: [],
       clientToken: undefined,
       isSignedIn: false,
-      uid: undefined,
-
-      // temp
-      notificationOptions: undefined
+      uid: undefined
     };
   }
 
@@ -121,23 +118,19 @@ class Dashboard extends React.Component {
       .then(async () => {
         const token = await messaging.getToken();
         this.setState({ clientToken: token });
-        this.updateUserDetailsInDB();
+        this.saveTokenToDB(this.state.uid, token);
       })
       .catch(err => {
         console.log('Unable to get permission to notify.', err);
       });
   };
 
-  updateUserDetailsInDB = () => {
-    // update db with user details
-    const { uid, clientToken } = this.state;
-    if (uid !== undefined && clientToken !== undefined) {
-      // eslint-disable-next-line no-undef
-      firebase
-        .database()
-        .ref('/users/' + uid)
-        .update({ token: clientToken });
-    }
+  saveTokenToDB = (uid, token) => {
+    // eslint-disable-next-line no-undef
+    firebase
+      .database()
+      .ref('/users/' + uid)
+      .update({ token });
   };
 
   fetchReports = async () => {
@@ -196,13 +189,7 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const {
-      messages,
-      clientToken,
-      reports,
-      devices,
-      notificationOptions
-    } = this.state;
+    const { messages, clientToken, reports, devices } = this.state;
 
     if (!this.state.isSignedIn) {
       return (
@@ -228,7 +215,6 @@ class Dashboard extends React.Component {
         >
           Sign-out
         </button>
-        <p>{JSON.stringify(notificationOptions)}</p>
         <h4>Service worker token</h4>
         <p>{clientToken}</p>
         <h4>Registered devices</h4>
