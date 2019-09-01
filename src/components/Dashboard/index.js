@@ -55,7 +55,8 @@ class Dashboard extends React.Component {
       reports: [],
       clientToken: undefined,
       isSignedIn: false,
-      uid: undefined
+      uid: undefined,
+      idToken: undefined
     };
   }
 
@@ -92,11 +93,9 @@ class Dashboard extends React.Component {
     // eslint-disable-next-line no-undef
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
       // set the uid of the user in component state
-      if (user && user.uid) {
+      if (user) {
         let { uid } = user;
         this.setState({ uid });
-        this.fetchDevices();
-        this.fetchReports();
       }
 
       // set the user signed in status
@@ -104,6 +103,10 @@ class Dashboard extends React.Component {
 
       if (this.state.isSignedIn && this.state.clientToken === undefined) {
         this.initFcm();
+      }
+
+      if (this.state.isSignedIn && this.state.idToken === undefined) {
+        this.initIdToken();
       }
     });
   }
@@ -125,6 +128,22 @@ class Dashboard extends React.Component {
       });
   };
 
+  initIdToken = () => {
+    // eslint-disable-next-line no-undef
+    firebase
+      .auth()
+      .currentUser.getIdToken(/* forceRefresh */ true)
+      .then(idToken => {
+        // Send token to your backend via HTTPS
+        this.setState({ idToken });
+        this.fetchDevices();
+        this.fetchReports();
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
   saveTokenToDB = (uid, token) => {
     // eslint-disable-next-line no-undef
     firebase
@@ -133,17 +152,27 @@ class Dashboard extends React.Component {
       .update({ token });
   };
 
-  fetchReports = async () => {
-    const { uid } = this.state;
-    if (uid) {
-      let reports = await fetch(`/api/report?userId=${uid}`)
+  fetchGetRequest = url => {
+    const { idToken } = this.state;
+    if (idToken) {
+      return fetch(url, {
+        headers: new Headers({
+          Authorization: 'Bearer ' + idToken
+        })
+      })
         .then(response => {
           return response.json();
         })
         .catch(error => {
           console.log('fetchReports failed', error);
         });
+    }
+  };
 
+  fetchReports = async () => {
+    const { uid } = this.state;
+    if (uid) {
+      let reports = await this.fetchGetRequest(`/api/report?userId=${uid}`);
       this.setState({ reports });
     }
   };
@@ -151,14 +180,7 @@ class Dashboard extends React.Component {
   fetchDevices = async () => {
     const { uid } = this.state;
     if (uid) {
-      let devices = await fetch(`/api/device?userId=${uid}`)
-        .then(response => {
-          return response.json();
-        })
-        .catch(error => {
-          console.log('fetchDevices failed', error);
-        });
-
+      let devices = await this.fetchGetRequest(`/api/device?userId=${uid}`);
       let deviceId = devices[0];
       this.setState({ devices, deviceId });
     }
@@ -170,18 +192,20 @@ class Dashboard extends React.Component {
       this.registerDeviceInputErrorMessageRef.current.innerHTML =
         deviceIdInput.validationMessage;
     } else {
-      const { uid } = this.state;
+      const { uid, idToken } = this.state;
       const deviceId = deviceIdInput.value;
-      if (uid && deviceId) {
+      if (uid && idToken && deviceId) {
         await fetch(`/api/device`, {
           method: 'post',
-          body: JSON.stringify({ deviceId, userId: uid })
+          body: JSON.stringify({ deviceId, userId: uid }),
+          headers: new Headers({
+            Authorization: 'Bearer ' + idToken
+          })
         })
           .then(() => {
             deviceIdInput.value = '';
             this.setState({ deviceId });
             this.fetchDevices();
-            this.fetchReports();
           })
           .catch(error => console.log(error));
       }

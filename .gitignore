@@ -29,3 +29,4 @@ yarn-error.log*
 firebase-debug.log
 nilmtk-service-firebase-adminsdk-98qzs-d84abd5c23.json
 database-debug.log
+.runtimeconfig.json

@@ -4,10 +4,84 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
+const validateDeviceSecret = (req, res) => {
+  console.log('Check if request is authorized');
+  if (
+    !req.headers.authorization ||
+    !req.headers.authorization.startsWith('Bearer ')
+  ) {
+    console.error(
+      'No Firebase ID token was passed as a Bearer token in the Authorization header.',
+      'Make sure you authorize your request by providing the following HTTP header:',
+      'Authorization: Bearer <Firebase ID Token>',
+      'or by passing a "__session" cookie.'
+    );
+    res.status(403).send('Unauthorized');
+    return;
+  }
+
+  let idToken = undefined;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
+  ) {
+    console.log('Found "Authorization" header');
+    // Read the ID Token from the Authorization header.
+    idToken = req.headers.authorization.split('Bearer ')[1];
+  }
+  if (idToken && idToken === functions.config().device.secret) {
+    return;
+  } else {
+    console.error('Error while verifying device secret:');
+    res.status(403).send('Unauthorized');
+  }
+};
+
+const validateFirebaseIdToken = (req, res) => {
+  console.log('Check if request is authorized with Firebase ID token');
+  if (
+    !req.headers.authorization ||
+    !req.headers.authorization.startsWith('Bearer ')
+  ) {
+    console.error(
+      'No Firebase ID token was passed as a Bearer token in the Authorization header.',
+      'Make sure you authorize your request by providing the following HTTP header:',
+      'Authorization: Bearer <Firebase ID Token>',
+      'or by passing a "__session" cookie.'
+    );
+    res.status(403).send('Unauthorized');
+    return;
+  }
+
+  let idToken;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
+  ) {
+    console.log('Found "Authorization" header');
+    // Read the ID Token from the Authorization header.
+    idToken = req.headers.authorization.split('Bearer ')[1];
+  }
+  admin
+    .auth()
+    .verifyIdToken(idToken)
+    .then(decodedIdToken => {
+      console.log('ID Token correctly decoded', decodedIdToken);
+      req.user = decodedIdToken;
+      return;
+    })
+    .catch(error => {
+      console.error('Error while verifying Firebase ID token:', error);
+      res.status(403).send('Unauthorized');
+    });
+};
+
 exports.report = functions.https.onRequest(async (req, res) => {
   // POST create new report
   let { method } = req;
   if (method === 'POST') {
+    // validate device secret because devices will only POST to /report
+    validateDeviceSecret(req, res);
     let { body: data } = req;
     if (data) {
       const { deviceId, text } = data;
@@ -24,6 +98,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
     }
     // GET fetch reports
   } else if (method === 'GET') {
+    validateFirebaseIdToken(req, res);
     let { query } = req;
     let { userId } = query;
     if (userId) {
@@ -45,6 +120,8 @@ exports.report = functions.https.onRequest(async (req, res) => {
     } else {
       res.status(422).send('Invalid payload');
     }
+  } else {
+    res.status(422).send('Invalid request');
   }
 });
 
@@ -70,6 +147,8 @@ const snapshotToArray = snapshot => {
 };
 
 exports.device = functions.https.onRequest(async (req, res) => {
+  validateFirebaseIdToken(req, res);
+
   // POST register new device
   let { method } = req;
   if (method === 'POST') {
@@ -105,7 +184,7 @@ exports.device = functions.https.onRequest(async (req, res) => {
       res.status(422).send('Invalid payload');
     }
   } else {
-    res.status(422).send('Invalid payload');
+    res.status(422).send('Invalid request');
   }
 });
 
