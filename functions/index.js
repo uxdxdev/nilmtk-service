@@ -4,7 +4,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
-const validateDeviceSecret = (req, res) => {
+const checkForBearerToken = (req, res) => {
   console.log('Check if request is authorized');
   if (
     !req.headers.authorization ||
@@ -19,17 +19,25 @@ const validateDeviceSecret = (req, res) => {
     res.status(403).send('Unauthorized');
     return;
   }
+};
 
-  let idToken = undefined;
+const getBearerToken = req => {
+  let token = undefined;
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer ')
   ) {
     console.log('Found "Authorization" header');
     // Read the ID Token from the Authorization header.
-    idToken = req.headers.authorization.split('Bearer ')[1];
+    token = req.headers.authorization.split('Bearer ')[1];
   }
-  if (idToken && idToken === functions.config().device.secret) {
+  return token;
+};
+
+const validateDeviceSecret = (req, res) => {
+  checkForBearerToken(req, res);
+  let token = getBearerToken(req);
+  if (token && token === functions.config().device.secret) {
     return;
   } else {
     console.error('Error while verifying device secret:');
@@ -38,33 +46,11 @@ const validateDeviceSecret = (req, res) => {
 };
 
 const validateFirebaseIdToken = (req, res) => {
-  console.log('Check if request is authorized with Firebase ID token');
-  if (
-    !req.headers.authorization ||
-    !req.headers.authorization.startsWith('Bearer ')
-  ) {
-    console.error(
-      'No Firebase ID token was passed as a Bearer token in the Authorization header.',
-      'Make sure you authorize your request by providing the following HTTP header:',
-      'Authorization: Bearer <Firebase ID Token>',
-      'or by passing a "__session" cookie.'
-    );
-    res.status(403).send('Unauthorized');
-    return;
-  }
-
-  let idToken;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer ')
-  ) {
-    console.log('Found "Authorization" header');
-    // Read the ID Token from the Authorization header.
-    idToken = req.headers.authorization.split('Bearer ')[1];
-  }
+  checkForBearerToken(req, res);
+  let token = getBearerToken(req);
   admin
     .auth()
-    .verifyIdToken(idToken)
+    .verifyIdToken(token)
     .then(decodedIdToken => {
       console.log('ID Token correctly decoded', decodedIdToken);
       req.user = decodedIdToken;
@@ -115,6 +101,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
           }
         });
 
+      // only return the latest n reports
       payload = payload.slice(-5);
       res.status(200).send(payload);
     } else {
@@ -175,10 +162,9 @@ exports.device = functions.https.onRequest(async (req, res) => {
     let { userId } = query;
     if (userId) {
       let deviceObjects = await fetchDevicesByUserId(userId);
-
       let deviceObjectsArray = snapshotToArray(deviceObjects);
       let payload = [];
-      deviceObjectsArray.forEach(entry => payload.push(entry.key));
+      deviceObjectsArray.forEach(device => payload.push(device.key));
       res.status(200).send(payload);
     } else {
       res.status(422).send('Invalid payload');
@@ -193,7 +179,6 @@ exports.notification = functions.database
   .onWrite(async (change, context) => {
     const report = change.after.val();
     const { text } = report;
-
     let { deviceId } = context.params;
     let userId = await admin
       .database()

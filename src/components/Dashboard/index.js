@@ -22,6 +22,8 @@ const uiConfig = {
       document.getElementById('loader').style.display = 'none';
     }
   },
+  // eslint-disable-next-line no-undef
+  credentialHelper: firebaseui.auth.CredentialHelper.NONE,
   // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
   // signInFlow: 'popup',
   // signInSuccessUrl: '/dashboard',
