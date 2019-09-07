@@ -208,6 +208,7 @@ class Dashboard extends React.Component {
             deviceIdInput.value = '';
             this.setState({ deviceId });
             this.fetchDevices();
+            this.fetchReports();
           })
           .catch(error => console.log(error));
       }
