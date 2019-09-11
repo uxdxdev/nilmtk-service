@@ -1,5 +1,6 @@
-import React from 'react';
-import { messaging } from '../../firebaseUtils';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import * as firebaseUtils from '../../firebaseUtils';
+import { useToast } from '@chakra-ui/core';
 
 // eslint-disable-next-line no-undef
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -43,40 +44,50 @@ const uiConfig = {
   // privacyPolicyUrl: '<your-privacy-policy-url>'
 };
 
-class Dashboard extends React.Component {
-  constructor(props) {
-    super(props);
-    this.textInputRef = React.createRef();
-    this.textInputErrorMessageRef = React.createRef();
+const Dashboard = () => {
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
-    this.registerDeviceInputRef = React.createRef();
-    this.registerDeviceInputErrorMessageRef = React.createRef();
+  const [toastMessage, setToastMessage] = useState(undefined);
+  const toast = useToast();
 
-    this.state = {
-      messages: [],
-      reports: [],
-      clientToken: undefined,
-      isSignedIn: false,
-      uid: undefined,
-      idToken: undefined
-    };
-  }
+  useEffect(() => {
+    if (toastMessage) {
+      const { title, body } = toastMessage;
 
-  componentDidMount() {
-    ui.start('#firebaseui-auth-container', uiConfig);
+      toast({
+        title,
+        description: body,
+        status: 'success',
+        duration: 9000,
+        isClosable: true
+      });
+    }
+  }, [toastMessage, toast]);
 
-    // event listener for push notifications
-    navigator.serviceWorker.addEventListener('message', payload => {
+  useEffect(() => {
+    if (!isSignedIn) {
+      console.log('show login');
+      ui.start('#firebaseui-auth-container', uiConfig);
+    }
+  }, [isSignedIn]);
+
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const messageHandler = payload => {
+      console.log('messageHandler', payload);
       const { data: payloadData } = payload;
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
 
       const { title, body, icon, link } = data;
+      const message = { title, body, icon, link };
 
       // display in UI
-      let { messages } = this.state;
-      messages.push({ title, body, icon, link });
-      this.setState({ messages });
+      setMessages(oldArray => [...oldArray, message]);
+
+      // set toast message
+      setToastMessage(message);
 
       // show notification when page is in focus
       const notificationOptions = {
@@ -85,199 +96,243 @@ class Dashboard extends React.Component {
         data: link
       };
 
-      this.setState({ notificationOptions });
-
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification(title, notificationOptions);
       });
-    });
+    };
 
-    // eslint-disable-next-line no-undef
-    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      // set the uid of the user in component state
-      if (user) {
-        let { uid } = user;
-        this.setState({ uid });
-      }
+    console.log('addEventListener message');
+    navigator.serviceWorker.addEventListener('message', messageHandler);
 
-      // set the user signed in status
-      this.setState({ isSignedIn: !!user });
+    return () => {
+      console.log('removeEventListener message');
+      navigator.serviceWorker.removeEventListener('message', messageHandler);
+    };
+  }, []);
 
-      if (this.state.isSignedIn && this.state.clientToken === undefined) {
-        this.initFcm();
-      }
+  const [clientToken, setClientToken] = useState(undefined);
+  const [userId, setUid] = useState(undefined);
 
-      if (this.state.isSignedIn && this.state.idToken === undefined) {
-        this.initIdToken();
-      }
-    });
-  }
+  useEffect(() => {
+    const saveClientTokenToDB = (uid, token) => {
+      // eslint-disable-next-line no-undef
+      firebase
+        .database()
+        .ref('/users/' + uid)
+        .update({ token });
+    };
 
-  componentWillUnmount() {
-    this.unregisterAuthObserver();
-  }
+    const initFcm = () => {
+      firebaseUtils.messaging
+        .requestPermission()
+        .then(async () => {
+          const token = await firebaseUtils.messaging.getToken();
+          console.log('client token', token);
+          setClientToken(token);
+          saveClientTokenToDB(userId, token);
+        })
+        .catch(err => {
+          console.log('Unable to get permission to notify.', err);
+        });
+    };
 
-  initFcm = () => {
-    messaging
-      .requestPermission()
-      .then(async () => {
-        const token = await messaging.getToken();
-        this.setState({ clientToken: token });
-        this.saveTokenToDB(this.state.uid, token);
-      })
-      .catch(err => {
-        console.log('Unable to get permission to notify.', err);
-      });
-  };
+    if (isSignedIn && clientToken === undefined) {
+      console.log('fetching client token');
+      initFcm();
+    }
+  }, [isSignedIn, clientToken, userId]);
 
-  initIdToken = () => {
-    // eslint-disable-next-line no-undef
-    firebase
-      .auth()
-      .currentUser.getIdToken(/* forceRefresh */ true)
-      .then(idToken => {
-        // Send token to your backend via HTTPS
-        this.setState({ idToken });
-        this.fetchDevices();
-        this.fetchReports();
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  };
+  const [idToken, setIdToken] = useState(undefined);
 
-  saveTokenToDB = (uid, token) => {
-    // eslint-disable-next-line no-undef
-    firebase
-      .database()
-      .ref('/users/' + uid)
-      .update({ token });
-  };
+  useEffect(() => {
+    const initIdToken = () => {
+      // eslint-disable-next-line no-undef
+      firebase
+        .auth()
+        .currentUser.getIdToken(/* forceRefresh */ true)
+        .then(idToken => {
+          // Send token to your backend via HTTPS
+          console.log('idToken', idToken);
+          setIdToken(idToken);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
 
-  fetchGetRequest = url => {
-    const { idToken } = this.state;
-    if (idToken) {
+    if (isSignedIn && idToken === undefined) {
+      console.log('fetching id token');
+      initIdToken();
+    }
+  }, [idToken, isSignedIn]);
+
+  const [reports, setReports] = useState([]);
+  const [devices, setDevices] = useState(undefined);
+
+  const fetchGetRequest = useCallback((url, token) => {
+    if (url && token) {
       return fetch(url, {
         headers: new Headers({
-          Authorization: 'Bearer ' + idToken
+          Authorization: 'Bearer ' + token
         })
       })
         .then(response => {
           return response.json();
         })
         .catch(error => {
-          console.log('fetchReports failed', error);
+          console.log('fetchGetRequest failed', error);
         });
+    } else {
+      console.log('fetchGetRequest error', url, token);
     }
-  };
+  }, []);
 
-  fetchReports = async () => {
-    const { uid } = this.state;
-    if (uid) {
-      let reports = await this.fetchGetRequest(`/api/report?userId=${uid}`);
-      this.setState({ reports });
-    }
-  };
+  const fetchReports = useCallback(
+    async (uid, token) => {
+      if (uid && token) {
+        let userReports = await fetchGetRequest(
+          `/api/report?userId=${uid}`,
+          token
+        );
+        setReports(userReports);
+      } else {
+        console.log('fetchReports error', uid, token);
+      }
+    },
+    [fetchGetRequest]
+  );
 
-  fetchDevices = async () => {
-    const { uid } = this.state;
-    if (uid) {
-      let devices = await this.fetchGetRequest(`/api/device?userId=${uid}`);
-      let deviceId = devices[0];
-      this.setState({ devices, deviceId });
-    }
-  };
+  useEffect(() => {
+    fetchReports(userId, idToken);
+  }, [idToken, userId, fetchReports]);
 
-  registerDevice = async () => {
-    const deviceIdInput = this.registerDeviceInputRef.current;
+  const fetchDevices = useCallback(
+    async (uid, token) => {
+      if (uid && token) {
+        let userDevices = await fetchGetRequest(
+          `/api/device?userId=${uid}`,
+          token
+        );
+        setDevices(userDevices);
+      } else {
+        console.log('fetchDevices error', uid, token);
+      }
+    },
+    [fetchGetRequest]
+  );
+
+  useEffect(() => {
+    fetchDevices(userId, idToken);
+  }, [idToken, userId, fetchDevices]);
+
+  useEffect(() => {
+    console.log('registerAuthObserver');
+    // eslint-disable-next-line no-undef
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      console.log('auth state changed');
+      // set the uid of the user in component state
+      if (user) {
+        let { uid } = user;
+        setUid(uid);
+      }
+
+      // set the user signed in status
+      setIsSignedIn(!!user);
+    });
+
+    return () => {
+      console.info('unregisterAuthObserver');
+      unregisterAuthObserver();
+    };
+  }, []);
+
+  const registerDeviceInputRef = useRef(null);
+  const registerDeviceInputErrorMessageRef = useRef(null);
+
+  const registerDevice = async (uid, token) => {
+    const deviceIdInput = registerDeviceInputRef.current;
     if (!deviceIdInput.checkValidity()) {
-      this.registerDeviceInputErrorMessageRef.current.innerHTML =
+      registerDeviceInputErrorMessageRef.current.innerHTML =
         deviceIdInput.validationMessage;
     } else {
-      const { uid, idToken } = this.state;
-      const deviceId = deviceIdInput.value;
-      if (uid && idToken && deviceId) {
+      const id = deviceIdInput.value;
+      if (uid && token && id) {
         await fetch(`/api/device`, {
           method: 'post',
-          body: JSON.stringify({ deviceId, userId: uid }),
+          body: JSON.stringify({ deviceId: id, userId: uid }),
           headers: new Headers({
-            Authorization: 'Bearer ' + idToken
+            Authorization: 'Bearer ' + token
           })
         })
           .then(() => {
             deviceIdInput.value = '';
-            this.setState({ deviceId });
-            this.fetchDevices();
-            this.fetchReports();
           })
           .catch(error => console.log(error));
+      } else {
+        console.log('registerDevice error', uid, token, id);
       }
     }
   };
 
-  render() {
-    const { messages, clientToken, reports, devices } = this.state;
-
-    if (!this.state.isSignedIn) {
-      return (
-        <div>
-          <h1>My App</h1>
-          <p>Please sign-in:</p>
-          <div id="firebaseui-auth-container" />
-          <div id="loader">Loading...</div>
-        </div>
-      );
-    }
-
+  if (!isSignedIn) {
     return (
-      <>
-        <p>This is the dashboard page.</p>
-        <button
-          onClick={() => {
-            // eslint-disable-next-line no-undef
-            firebase.auth().signOut();
-            // redirect to landing page
-            window.location.href = '/';
-          }}
-        >
-          Sign-out
-        </button>
-        <h4>Service worker token</h4>
-        <p>{clientToken}</p>
-        <h4>Registered devices</h4>
-        <button onClick={this.fetchDevices}>Refresh</button>
-        <ul>
-          {devices &&
-            devices.map((device, index) => <li key={index}>{device}</li>)}
-        </ul>
-        <input
-          type="number"
-          ref={this.registerDeviceInputRef}
-          required
-          placeholder="device id"
-        />
-        <button onClick={this.registerDevice}>Register</button>
-        <p ref={this.registerDeviceInputErrorMessageRef} />
-
-        <h4>Reports</h4>
-        <button onClick={this.fetchReports}>Refresh</button>
-        <ul>
-          {reports &&
-            reports.map((report, index) => <li key={index}>{report}</li>)}
-        </ul>
-        <h4>Push notifications</h4>
-        <p>Send report to receive notification</p>
-        <ul>
-          {messages &&
-            messages.map((message, index) => (
-              <li key={index}>
-                {message.title} {message.body}
-              </li>
-            ))}
-        </ul>
-      </>
+      <div>
+        <h1>My App</h1>
+        <p>Please sign-in:</p>
+        <div id="firebaseui-auth-container" />
+        <div id="loader">Loading...</div>
+      </div>
     );
   }
-}
+
+  return (
+    <>
+      <p>This is the dashboard page.</p>
+      <button
+        onClick={() => {
+          // eslint-disable-next-line no-undef
+          firebase.auth().signOut();
+          // redirect to landing page
+          window.location.href = '/';
+        }}
+      >
+        Sign-out
+      </button>
+      <h4>Service worker token</h4>
+      <p>{clientToken}</p>
+      <h4>Registered devices</h4>
+      <button onClick={() => fetchDevices(userId, idToken)}>Refresh</button>
+      <ul>
+        {devices &&
+          devices.map((device, index) => <li key={index}>{device}</li>)}
+      </ul>
+      <input
+        type="number"
+        ref={registerDeviceInputRef}
+        required
+        placeholder="device id"
+      />
+      <button onClick={() => registerDevice(userId, idToken)}>Register</button>
+      <p ref={registerDeviceInputErrorMessageRef} />
+
+      <h4>Reports</h4>
+      <button onClick={() => fetchReports(userId, idToken)}>Refresh</button>
+      <ul>
+        {reports &&
+          reports.map((report, index) => <li key={index}>{report}</li>)}
+      </ul>
+      <h4>Push notifications</h4>
+      <p>Send report to receive notification</p>
+      <ul>
+        {messages &&
+          messages.map((message, index) => (
+            <li key={index}>
+              {message.title} {message.body}
+            </li>
+          ))}
+      </ul>
+    </>
+  );
+};
 
 export default Dashboard;

@@ -1,5 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useColorMode, Button } from '@chakra-ui/core';
+
+const ColorMode = () => {
+  const { colorMode, toggleColorMode } = useColorMode();
+  return (
+    <Button onClick={toggleColorMode}>
+      Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
+    </Button>
+  );
+};
 
 const Navigation = () => (
   <nav className="navigation">
@@ -9,6 +19,9 @@ const Navigation = () => (
       </li>
       <li>
         <Link to="/dashboard">Dashboard</Link>
+      </li>
+      <li>
+        <ColorMode />
       </li>
     </ul>
   </nav>

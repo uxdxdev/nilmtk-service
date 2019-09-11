@@ -154,7 +154,7 @@ exports.device = functions.https.onRequest(async (req, res) => {
         res.status(422).send('Invalid payload');
       }
     } else {
-      res.status(422).send('Invalid payload');
+      res.status(422).send('Invalid data payload');
     }
     // GET fetch registered devices
   } else if (method === 'GET') {
