@@ -70,7 +70,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
     validateDeviceSecret(req, res);
     let { body: data } = req;
     if (data) {
-      const { deviceId, text } = data;
+      const { deviceId, text, deviceName } = data;
       if (deviceId && text) {
         await admin
           .database()
@@ -142,12 +142,12 @@ exports.device = functions.https.onRequest(async (req, res) => {
     let { body } = req;
     let data = JSON.parse(body);
     if (data) {
-      const { deviceId, userId } = data;
+      const { deviceName, deviceId, userId } = data;
       if (deviceId && userId) {
         await admin
           .database()
           .ref('/devices/' + deviceId)
-          .update({ registeredUser: userId });
+          .update({ deviceName: deviceName || '', registeredUser: userId });
 
         res.status(200).send('Device registered');
       } else {
@@ -164,7 +164,7 @@ exports.device = functions.https.onRequest(async (req, res) => {
       let deviceObjects = await fetchDevicesByUserId(userId);
       let deviceObjectsArray = snapshotToArray(deviceObjects);
       let payload = [];
-      deviceObjectsArray.forEach(device => payload.push(device.key));
+      deviceObjectsArray.forEach(device => payload.push(device));
       res.status(200).send(payload);
     } else {
       res.status(422).send('Invalid payload');

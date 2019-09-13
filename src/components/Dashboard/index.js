@@ -1,6 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as firebaseUtils from '../../firebaseUtils';
-import { useToast } from '@chakra-ui/core';
+import { useToast, Box, Heading } from '@chakra-ui/core';
+import Reports from './components/Reports';
+import Devices from './components/Devices';
+import Navigation from '../Navigation';
 
 // eslint-disable-next-line no-undef
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -48,12 +51,12 @@ const Dashboard = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
 
   const [toastMessage, setToastMessage] = useState(undefined);
+
   const toast = useToast();
 
   useEffect(() => {
     if (toastMessage) {
       const { title, body } = toastMessage;
-
       toast({
         title,
         description: body,
@@ -71,8 +74,6 @@ const Dashboard = () => {
     }
   }, [isSignedIn]);
 
-  const [messages, setMessages] = useState([]);
-
   useEffect(() => {
     const messageHandler = payload => {
       console.log('messageHandler', payload);
@@ -82,9 +83,6 @@ const Dashboard = () => {
 
       const { title, body, icon, link } = data;
       const message = { title, body, icon, link };
-
-      // display in UI
-      setMessages(oldArray => [...oldArray, message]);
 
       // set toast message
       setToastMessage(message);
@@ -166,65 +164,6 @@ const Dashboard = () => {
     }
   }, [idToken, isSignedIn]);
 
-  const [reports, setReports] = useState([]);
-  const [devices, setDevices] = useState(undefined);
-
-  const fetchGetRequest = useCallback((url, token) => {
-    if (url && token) {
-      return fetch(url, {
-        headers: new Headers({
-          Authorization: 'Bearer ' + token
-        })
-      })
-        .then(response => {
-          return response.json();
-        })
-        .catch(error => {
-          console.log('fetchGetRequest failed', error);
-        });
-    } else {
-      console.log('fetchGetRequest error', url, token);
-    }
-  }, []);
-
-  const fetchReports = useCallback(
-    async (uid, token) => {
-      if (uid && token) {
-        let userReports = await fetchGetRequest(
-          `/api/report?userId=${uid}`,
-          token
-        );
-        setReports(userReports);
-      } else {
-        console.log('fetchReports error', uid, token);
-      }
-    },
-    [fetchGetRequest]
-  );
-
-  useEffect(() => {
-    fetchReports(userId, idToken);
-  }, [idToken, userId, fetchReports]);
-
-  const fetchDevices = useCallback(
-    async (uid, token) => {
-      if (uid && token) {
-        let userDevices = await fetchGetRequest(
-          `/api/device?userId=${uid}`,
-          token
-        );
-        setDevices(userDevices);
-      } else {
-        console.log('fetchDevices error', uid, token);
-      }
-    },
-    [fetchGetRequest]
-  );
-
-  useEffect(() => {
-    fetchDevices(userId, idToken);
-  }, [idToken, userId, fetchDevices]);
-
   useEffect(() => {
     console.log('registerAuthObserver');
     // eslint-disable-next-line no-undef
@@ -246,91 +185,35 @@ const Dashboard = () => {
     };
   }, []);
 
-  const registerDeviceInputRef = useRef(null);
-  const registerDeviceInputErrorMessageRef = useRef(null);
-
-  const registerDevice = async (uid, token) => {
-    const deviceIdInput = registerDeviceInputRef.current;
-    if (!deviceIdInput.checkValidity()) {
-      registerDeviceInputErrorMessageRef.current.innerHTML =
-        deviceIdInput.validationMessage;
-    } else {
-      const id = deviceIdInput.value;
-      if (uid && token && id) {
-        await fetch(`/api/device`, {
-          method: 'post',
-          body: JSON.stringify({ deviceId: id, userId: uid }),
-          headers: new Headers({
-            Authorization: 'Bearer ' + token
-          })
-        })
-          .then(() => {
-            deviceIdInput.value = '';
-          })
-          .catch(error => console.log(error));
-      } else {
-        console.log('registerDevice error', uid, token, id);
-      }
-    }
-  };
-
   if (!isSignedIn) {
     return (
-      <div>
-        <h1>My App</h1>
-        <p>Please sign-in:</p>
+      <Box>
+        <Navigation isSignedIn={isSignedIn} />
         <div id="firebaseui-auth-container" />
         <div id="loader">Loading...</div>
-      </div>
+      </Box>
     );
   }
 
   return (
     <>
-      <p>This is the dashboard page.</p>
-      <button
-        onClick={() => {
-          // eslint-disable-next-line no-undef
-          firebase.auth().signOut();
-          // redirect to landing page
-          window.location.href = '/';
-        }}
-      >
-        Sign-out
-      </button>
-      <h4>Service worker token</h4>
-      <p>{clientToken}</p>
-      <h4>Registered devices</h4>
-      <button onClick={() => fetchDevices(userId, idToken)}>Refresh</button>
-      <ul>
-        {devices &&
-          devices.map((device, index) => <li key={index}>{device}</li>)}
-      </ul>
-      <input
-        type="number"
-        ref={registerDeviceInputRef}
-        required
-        placeholder="device id"
-      />
-      <button onClick={() => registerDevice(userId, idToken)}>Register</button>
-      <p ref={registerDeviceInputErrorMessageRef} />
+      <Navigation isSignedIn={isSignedIn} />
+      <Box p={4}>
+        {userId && idToken && (
+          <>
+            <Reports
+              userId={userId}
+              idToken={idToken}
+              newReport={toastMessage}
+            />
 
-      <h4>Reports</h4>
-      <button onClick={() => fetchReports(userId, idToken)}>Refresh</button>
-      <ul>
-        {reports &&
-          reports.map((report, index) => <li key={index}>{report}</li>)}
-      </ul>
-      <h4>Push notifications</h4>
-      <p>Send report to receive notification</p>
-      <ul>
-        {messages &&
-          messages.map((message, index) => (
-            <li key={index}>
-              {message.title} {message.body}
-            </li>
-          ))}
-      </ul>
+            <Devices userId={userId} idToken={idToken} />
+          </>
+        )}
+
+        <Heading>Service worker token</Heading>
+        <p>{clientToken}</p>
+      </Box>
     </>
   );
 };

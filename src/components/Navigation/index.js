@@ -1,30 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useColorMode, Button } from '@chakra-ui/core';
+// import { Link } from 'react-router-dom';
+import { Flex, Heading, Button } from '@chakra-ui/core';
 
-const ColorMode = () => {
-  const { colorMode, toggleColorMode } = useColorMode();
+const Navigation = ({ isSignedIn }) => {
   return (
-    <Button onClick={toggleColorMode}>
-      Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
-    </Button>
+    <Flex justifyContent="space-between" alignItems="center" p={4}>
+      <Heading as="h1" size="lg" m={0}>
+        Consumo
+      </Heading>
+
+      {isSignedIn && (
+        <Button
+          onClick={() => {
+            // eslint-disable-next-line no-undef
+            firebase.auth().signOut();
+          }}
+        >
+          Sign-out
+        </Button>
+      )}
+    </Flex>
   );
 };
-
-const Navigation = () => (
-  <nav className="navigation">
-    <ul>
-      <li>
-        <Link to="/">Home</Link>
-      </li>
-      <li>
-        <Link to="/dashboard">Dashboard</Link>
-      </li>
-      <li>
-        <ColorMode />
-      </li>
-    </ul>
-  </nav>
-);
 
 export default Navigation;

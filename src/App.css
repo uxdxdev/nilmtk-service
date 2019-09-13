@@ -1,13 +1,3 @@
-.navigation li {
-  display: inline;
-  list-style-type: none;
-}
-
-.navigation a {
-  padding: 0px 10px;
-  text-decoration: none;
-}
-
 .not-found {
   text-align: center;
 }

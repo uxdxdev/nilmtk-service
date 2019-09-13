@@ -1,27 +1,22 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-// import logo from './logo.svg';
 import './App.css';
-import { Navigation, LandingPage, Dashboard, NotFound } from './components';
-import { ThemeProvider, ColorModeProvider } from '@chakra-ui/core';
+import { Dashboard, NotFound } from './components';
+import { ThemeProvider, theme, ColorModeProvider } from '@chakra-ui/core';
 
-class App extends Component {
-  render() {
-    return (
-      <ThemeProvider>
-        <ColorModeProvider>
-          <Router>
-            <Navigation />
-            <Switch>
-              <Route exact path="/" component={LandingPage} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route component={NotFound} />
-            </Switch>
-          </Router>
-        </ColorModeProvider>
-      </ThemeProvider>
-    );
-  }
-}
+const App = () => {
+  return (
+    <ThemeProvider theme={theme}>
+      <ColorModeProvider value="light">
+        <Router>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route component={NotFound} />
+          </Switch>
+        </Router>
+      </ColorModeProvider>
+    </ThemeProvider>
+  );
+};
 
 export default App;
