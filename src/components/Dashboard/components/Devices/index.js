@@ -106,11 +106,14 @@ const Devices = ({ userId, idToken }) => {
       <Heading>Devices</Heading>
       <List styleType="disc">
         {devices &&
-          devices.map((device, index) => (
-            <ListItem key={index}>
-              {`${device.key} (${device.deviceName})`}
-            </ListItem>
-          ))}
+          devices.map((device, index) => {
+            const deviceName = device.deviceName
+              ? `(${device.deviceName})`
+              : '';
+            return (
+              <ListItem key={index}>{`${device.key} ${deviceName}`}</ListItem>
+            );
+          })}
       </List>
     </>
   );

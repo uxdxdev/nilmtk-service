@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as firebaseUtils from '../../firebaseUtils';
-import { useToast, Box, Heading } from '@chakra-ui/core';
+import { useToast, Box } from '@chakra-ui/core';
 import Reports from './components/Reports';
 import Devices from './components/Devices';
 import Navigation from '../Navigation';
@@ -69,14 +69,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!isSignedIn) {
-      console.log('show login');
       ui.start('#firebaseui-auth-container', uiConfig);
     }
   }, [isSignedIn]);
 
   useEffect(() => {
     const messageHandler = payload => {
-      console.log('messageHandler', payload);
       const { data: payloadData } = payload;
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
@@ -99,11 +97,9 @@ const Dashboard = () => {
       });
     };
 
-    console.log('addEventListener message');
     navigator.serviceWorker.addEventListener('message', messageHandler);
 
     return () => {
-      console.log('removeEventListener message');
       navigator.serviceWorker.removeEventListener('message', messageHandler);
     };
   }, []);
@@ -125,17 +121,14 @@ const Dashboard = () => {
         .requestPermission()
         .then(async () => {
           const token = await firebaseUtils.messaging.getToken();
-          console.log('client token', token);
+
           setClientToken(token);
           saveClientTokenToDB(userId, token);
         })
-        .catch(err => {
-          console.log('Unable to get permission to notify.', err);
-        });
+        .catch(err => {});
     };
 
     if (isSignedIn && clientToken === undefined) {
-      console.log('fetching client token');
       initFcm();
     }
   }, [isSignedIn, clientToken, userId]);
@@ -150,25 +143,20 @@ const Dashboard = () => {
         .currentUser.getIdToken(/* forceRefresh */ true)
         .then(idToken => {
           // Send token to your backend via HTTPS
-          console.log('idToken', idToken);
+
           setIdToken(idToken);
         })
-        .catch(error => {
-          console.log(error);
-        });
+        .catch(error => {});
     };
 
     if (isSignedIn && idToken === undefined) {
-      console.log('fetching id token');
       initIdToken();
     }
   }, [idToken, isSignedIn]);
 
   useEffect(() => {
-    console.log('registerAuthObserver');
     // eslint-disable-next-line no-undef
     const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      console.log('auth state changed');
       // set the uid of the user in component state
       if (user) {
         let { uid } = user;
@@ -211,8 +199,8 @@ const Dashboard = () => {
           </>
         )}
 
-        <Heading>Service worker token</Heading>
-        <p>{clientToken}</p>
+        {/* <Heading>Service worker token</Heading>
+        <p>{clientToken}</p> */}
       </Box>
     </>
   );
