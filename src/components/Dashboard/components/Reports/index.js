@@ -7,8 +7,9 @@ const Reports = ({ userId, idToken, newReport }) => {
 
   useEffect(() => {
     if (newReport) {
-      const { body } = newReport;
-      setReports(reports => [...reports, body]);
+      const { reportType, text } = newReport;
+      console.log(newReport);
+      setReports(reports => [...reports.slice(-4), { reportType, text }]);
     }
   }, [newReport]);
 
@@ -32,10 +33,10 @@ const Reports = ({ userId, idToken, newReport }) => {
     <>
       <Stack spacing={1}>
         {reports ? (
-          reports.map((report, index) => (
-            <Alert key={index} status="info">
+          reports.reverse().map((report, index) => (
+            <Alert key={index} status={report.reportType}>
               <AlertIcon />
-              {report}
+              {report.text}
             </Alert>
           ))
         ) : (

@@ -56,10 +56,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (toastMessage) {
-      const { title, body } = toastMessage;
+      const { title, text } = toastMessage;
       toast({
         title,
-        description: body,
+        description: text,
         status: 'success',
         duration: 9000,
         isClosable: true
@@ -79,8 +79,8 @@ const Dashboard = () => {
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
 
-      const { title, body, icon, link } = data;
-      const message = { title, body, icon, link };
+      const { title, reportType, body, icon, link } = data;
+      const message = { title, reportType, text: body, icon, link };
 
       // set toast message
       setToastMessage(message);

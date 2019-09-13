@@ -70,12 +70,12 @@ exports.report = functions.https.onRequest(async (req, res) => {
     validateDeviceSecret(req, res);
     let { body: data } = req;
     if (data) {
-      const { deviceId, text, deviceName } = data;
+      const { deviceId, text, reportType } = data;
       if (deviceId && text) {
         await admin
           .database()
           .ref('/devices/' + deviceId + '/reports')
-          .push({ text });
+          .push({ text, reportType });
 
         res.status(200).send('Report received');
       }
@@ -96,7 +96,7 @@ exports.report = functions.https.onRequest(async (req, res) => {
         .forEach(reports => {
           if (reports !== undefined) {
             Object.values(reports).forEach(report => {
-              payload.push(report.text);
+              payload.push(report);
             });
           }
         });
@@ -178,7 +178,7 @@ exports.notification = functions.database
   .ref('/devices/{deviceId}/reports/{reportId}')
   .onWrite(async (change, context) => {
     const report = change.after.val();
-    const { text } = report;
+    const { text, reportType } = report;
     let { deviceId } = context.params;
     let userId = await admin
       .database()
@@ -194,6 +194,7 @@ exports.notification = functions.database
       data: {
         title: 'Consumo',
         body: text,
+        reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com/dashboard'
       }
