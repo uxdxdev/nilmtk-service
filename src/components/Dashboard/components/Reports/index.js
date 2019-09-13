@@ -8,7 +8,6 @@ const Reports = ({ userId, idToken, newReport }) => {
   useEffect(() => {
     if (newReport) {
       const { reportType, text } = newReport;
-      console.log(newReport);
       setReports(reports => [...reports.slice(-4), { reportType, text }]);
     }
   }, [newReport]);
