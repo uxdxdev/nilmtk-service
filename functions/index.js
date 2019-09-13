@@ -196,7 +196,7 @@ exports.notification = functions.database
         body: text,
         reportType,
         icon: './favicon.ico',
-        link: 'https://nilmtk-service.firebaseapp.com/dashboard'
+        link: 'https://nilmtk-service.firebaseapp.com'
       }
     };
 
