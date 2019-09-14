@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import * as firebaseUtils from '../../firebaseUtils';
+import * as firebaseUtils from '../../utils/firebaseUtils';
 import { useToast, Box } from '@chakra-ui/core';
 import Reports from './components/Reports';
 import Devices from './components/Devices';

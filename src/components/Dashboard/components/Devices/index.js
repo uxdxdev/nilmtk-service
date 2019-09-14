@@ -13,6 +13,30 @@ import {
 
 const Devices = ({ userId, idToken }) => {
   const [devices, setDevices] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [deviceSockets, setDeviceSockets] = useState({});
+
+  useEffect(() => {
+    if (devices.length > 0) {
+      devices.forEach(device => {
+        // if device socket does not exist
+        if (!(device.key in deviceSockets)) {
+          // let socket = new WebSocket(
+          //   `ws://connect.websocket.in/consumo?room_id=${device.key}`
+          // );
+          // socket.onopen = () => {
+          //   socket.send(
+          //     JSON.stringify({ status: `Device ${device.key} connected` })
+          //   );
+          // };
+          // setDeviceSockets(sockets => {
+          //   Object.assign(sockets, { [device.key]: socket });
+          //   return sockets;
+          // });
+        }
+      });
+    }
+  }, [deviceSockets, devices]);
 
   const fetchDevices = async (uid, token) => {
     if (uid && token) {
@@ -71,6 +95,11 @@ const Devices = ({ userId, idToken }) => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
+  const startDevice = (deviceId, type) => {
+    deviceSockets[deviceId].send(JSON.stringify({ command: 'start', type }));
+  };
+
   return (
     <>
       <Heading>Register Monitoring Device</Heading>
@@ -111,7 +140,15 @@ const Devices = ({ userId, idToken }) => {
               ? `(${device.deviceName})`
               : '';
             return (
-              <ListItem key={index}>{`${device.key} ${deviceName}`}</ListItem>
+              <ListItem key={index}>
+                {`${device.key} ${deviceName}`}
+                {/* <Button onClick={() => startDevice(device.key, 'main')}>
+                  Main
+                </Button>
+                <Button onClick={() => startDevice(device.key, 'simulate')}>
+                  Simulate
+                </Button> */}
+              </ListItem>
             );
           })}
       </List>
