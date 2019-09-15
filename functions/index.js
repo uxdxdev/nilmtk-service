@@ -202,7 +202,7 @@ exports.notification = functions.database
       data: {
         title: 'Consumo',
         body: text,
-        name: deviceName,
+        name: deviceName.val(),
         reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'

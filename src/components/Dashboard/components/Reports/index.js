@@ -7,10 +7,10 @@ const Reports = ({ userId, idToken, newReport }) => {
 
   useEffect(() => {
     if (newReport) {
-      const { deviceId, name, reportType, text } = newReport;
+      const { name, reportType, text } = newReport;
       setReports(reports => [
         ...reports.slice(-4),
-        { deviceId, name, reportType, text }
+        { name, report: { reportType, text } }
       ]);
     }
   }, [newReport]);

@@ -79,8 +79,15 @@ const Dashboard = () => {
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
 
-      const { title, deviceName, reportType, body, icon, link } = data;
-      const message = { title, deviceName, reportType, text: body, icon, link };
+      const { title, name, reportType, body, icon, link } = data;
+      const message = {
+        title,
+        name,
+        reportType,
+        text: body,
+        icon,
+        link
+      };
 
       // set toast message
       setToastMessage(message);
