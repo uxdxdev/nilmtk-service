@@ -79,10 +79,9 @@ const Dashboard = () => {
       const firebaseMessageData = payloadData['firebase-messaging-msg-data'];
       const { data } = firebaseMessageData;
 
-      const { title, name, reportType, body, icon, link } = data;
+      const { title, reportType, body, icon, link } = data;
       const message = {
         title,
-        name,
         reportType,
         text: body,
         icon,
@@ -193,7 +192,7 @@ const Dashboard = () => {
   return (
     <>
       <Navigation isSignedIn={isSignedIn} />
-      <Box p={4}>
+      <Box p={4} width="50%">
         {userId && idToken && (
           <>
             <Reports

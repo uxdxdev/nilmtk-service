@@ -99,7 +99,10 @@ exports.report = functions.https.onRequest(async (req, res) => {
           const { name } = result;
           if (result.reports !== undefined) {
             Object.values(result.reports).forEach(report => {
-              payload.push({ name, report });
+              payload.push({
+                reportType: report.reportType,
+                text: `${name}: ${report.text}`
+              });
             });
           }
         });
@@ -203,7 +206,6 @@ exports.notification = functions.database
       data: {
         title: 'Consumo',
         body: `${deviceName}: ${text}`,
-        name: deviceName,
         reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'
