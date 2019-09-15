@@ -188,7 +188,7 @@ exports.notification = functions.database
       .ref(`/devices/${deviceId}/registeredUser`)
       .once('value', snapshot => snapshot.val());
 
-    let deviceName = await admin
+    let deviceNameSnapshot = await admin
       .database()
       .ref(`/devices/${deviceId}/deviceName`)
       .once('value', snapshot => snapshot.val());
@@ -198,11 +198,12 @@ exports.notification = functions.database
       .ref(`/users/${userId.val()}/token`)
       .once('value', snapshot => snapshot.val());
 
+    let deviceName = deviceNameSnapshot.val();
     let payload = {
       data: {
         title: 'Consumo',
-        body: text,
-        name: deviceName.val(),
+        body: `${deviceName}: ${text}`,
+        name: deviceName,
         reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'
