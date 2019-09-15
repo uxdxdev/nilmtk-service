@@ -92,11 +92,14 @@ exports.report = functions.https.onRequest(async (req, res) => {
 
       let payload = [];
       snapshotToArray(deviceObjects)
-        .map(device => device.reports)
-        .forEach(reports => {
-          if (reports !== undefined) {
-            Object.values(reports).forEach(report => {
-              payload.push(report);
+        .map(device => {
+          return { reports: device.reports, name: device.deviceName };
+        })
+        .forEach(result => {
+          const { name } = result;
+          if (result.reports !== undefined) {
+            Object.values(result.reports).forEach(report => {
+              payload.push({ name, report });
             });
           }
         });
@@ -185,6 +188,11 @@ exports.notification = functions.database
       .ref(`/devices/${deviceId}/registeredUser`)
       .once('value', snapshot => snapshot.val());
 
+    let deviceName = await admin
+      .database()
+      .ref(`/devices/${deviceId}/deviceName`)
+      .once('value', snapshot => snapshot.val());
+
     let token = await admin
       .database()
       .ref(`/users/${userId.val()}/token`)
@@ -194,6 +202,7 @@ exports.notification = functions.database
       data: {
         title: 'Consumo',
         body: text,
+        name: deviceName,
         reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'

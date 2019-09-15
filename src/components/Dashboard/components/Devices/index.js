@@ -4,11 +4,12 @@ import {
   Heading,
   Button,
   Input,
-  List,
-  ListItem,
   FormControl,
   FormLabel,
-  FormErrorMessage
+  FormErrorMessage,
+  Text,
+  Box,
+  Stack
 } from '@chakra-ui/core';
 
 const Devices = ({ userId, idToken }) => {
@@ -54,9 +55,6 @@ const Devices = ({ userId, idToken }) => {
     fetchDevices(userId, idToken);
   }, [idToken, userId]);
 
-  // device name
-  const registerDeviceNameInputRef = useRef(null);
-
   // device id
   const registerDeviceIdInputRef = useRef(null);
   const [isInvalidDeviceId, setIsInvalidDeviceId] = useState(false);
@@ -64,14 +62,48 @@ const Devices = ({ userId, idToken }) => {
     undefined
   );
 
+  // device name
+  const registerDeviceNameInputRef = useRef(null);
+  const [isInvalidDeviceName, setIsInvalidDeviceName] = useState(false);
+  const [
+    deviceNameInputErrorMessage,
+    setDeviceNameInputErrorMessage
+  ] = useState(undefined);
+
+  const [hasRegisterFailed, setHasRegisterFailed] = useState(false);
+
+  /**
+   * Register new device.
+   * @param {*} uid
+   * @param {*} token
+   */
   const registerDevice = async (uid, token) => {
+    setHasRegisterFailed(false);
+
+    if (isInvalidDeviceName) {
+      setIsInvalidDeviceName(false);
+    }
+
+    if (isInvalidDeviceId) {
+      setIsInvalidDeviceId(false);
+    }
+
     const deviceIdInput = registerDeviceIdInputRef.current;
+    const deviceNameInput = registerDeviceNameInputRef.current;
+    let errorFound = false;
     if (!deviceIdInput.checkValidity()) {
       setIsInvalidDeviceId(true);
       setDeviceIdInputErrorMessage(deviceIdInput.validationMessage);
-    } else {
-      setIsInvalidDeviceId(false);
-      const deviceNameInput = registerDeviceNameInputRef.current;
+      errorFound = true;
+    }
+
+    if (!deviceNameInput.checkValidity()) {
+      setIsInvalidDeviceName(true);
+      setDeviceNameInputErrorMessage(deviceNameInput.validationMessage);
+      errorFound = true;
+    }
+
+    if (!errorFound) {
       const id = deviceIdInput.value;
       const name = deviceNameInput.value;
       if (uid && token && id) {
@@ -82,13 +114,20 @@ const Devices = ({ userId, idToken }) => {
             Authorization: 'Bearer ' + token
           })
         })
-          .then(() => {
-            deviceNameInput.value = '';
-            deviceIdInput.value = '';
+          .then(response => {
+            if (response.status === 200) {
+              deviceNameInput.value = '';
+              deviceIdInput.value = '';
 
-            fetchDevices(userId, idToken);
+              fetchDevices(userId, idToken);
+            } else {
+              throw new Error('Not 200 response');
+            }
           })
-          .catch(error => console.log(error));
+          .catch(error => {
+            setHasRegisterFailed(true);
+            console.log(error);
+          });
       } else {
         console.log('registerDevice error', uid, token, id);
       }
@@ -100,12 +139,19 @@ const Devices = ({ userId, idToken }) => {
     deviceSockets[deviceId].send(JSON.stringify({ command: 'start', type }));
   };
 
+  const StackItem = ({ text }) => (
+    <Box p={5} shadow="md" borderWidth="1px">
+      {/* <Heading fontSize="xl">{title}</Heading> */}
+      <Text>{text}</Text>
+    </Box>
+  );
+
   return (
     <>
-      <Heading>Register Monitoring Device</Heading>
+      <Heading my={1}>Register Monitoring Device</Heading>
       <form>
-        <FormControl mb={2}>
-          <FormLabel htmlFor="device-name">Device Name (optional)</FormLabel>
+        <FormControl mb={2} isInvalid={isInvalidDeviceName} isRequired>
+          <FormLabel htmlFor="device-name">Device Name</FormLabel>
           <Input
             id="device-name"
             type="text"
@@ -114,7 +160,9 @@ const Devices = ({ userId, idToken }) => {
             size="sm"
             width="50%"
           />
+          <FormErrorMessage>{deviceNameInputErrorMessage}</FormErrorMessage>
         </FormControl>
+
         <FormControl isInvalid={isInvalidDeviceId} isRequired>
           <FormLabel htmlFor="device-id">Device ID</FormLabel>
           <Input
@@ -128,30 +176,35 @@ const Devices = ({ userId, idToken }) => {
           <FormErrorMessage>{deviceIdInputErrorMessage}</FormErrorMessage>
         </FormControl>
 
-        <Button mt={4} onClick={() => registerDevice(userId, idToken)}>
-          Register
-        </Button>
+        <FormControl isInvalid={hasRegisterFailed}>
+          <Button mt={4} onClick={() => registerDevice(userId, idToken)}>
+            Register
+          </Button>
+          <FormErrorMessage>
+            Error registering device. Please try again later.
+          </FormErrorMessage>
+        </FormControl>
       </form>
-      <Heading>Devices</Heading>
-      <List styleType="disc">
+      <Heading my={1}>Devices</Heading>
+      <Stack>
         {devices &&
           devices.map((device, index) => {
             const deviceName = device.deviceName
               ? `(${device.deviceName})`
               : '';
             return (
-              <ListItem key={index}>
-                {`${device.key} ${deviceName}`}
-                {/* <Button onClick={() => startDevice(device.key, 'main')}>
+              <StackItem key={index} text={`${device.key} ${deviceName}`} />
+              /* <Button onClick={() => startDevice(device.key, 'main')}>
                   Main
                 </Button>
                 <Button onClick={() => startDevice(device.key, 'simulate')}>
                   Simulate
-                </Button> */}
-              </ListItem>
+                </Button> */
+              /* </ListItem> */
             );
           })}
-      </List>
+      </Stack>
+      {/* </List> */}
     </>
   );
 };
