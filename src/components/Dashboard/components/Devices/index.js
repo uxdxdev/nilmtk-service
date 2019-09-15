@@ -149,6 +149,7 @@ const Devices = ({ userId, idToken }) => {
   return (
     <>
       <Heading my={1}>Register Monitoring Device</Heading>
+
       <form>
         <FormControl mb={2} isInvalid={isInvalidDeviceName} isRequired>
           <FormLabel htmlFor="device-name">Device Name</FormLabel>
@@ -158,7 +159,7 @@ const Devices = ({ userId, idToken }) => {
             ref={registerDeviceNameInputRef}
             placeholder="Enter new device name"
             size="sm"
-            width="50%"
+            width="150px"
           />
           <FormErrorMessage>{deviceNameInputErrorMessage}</FormErrorMessage>
         </FormControl>
@@ -171,7 +172,7 @@ const Devices = ({ userId, idToken }) => {
             ref={registerDeviceIdInputRef}
             placeholder="Enter new device ID"
             size="sm"
-            width="50%"
+            width="150px"
           />
           <FormErrorMessage>{deviceIdInputErrorMessage}</FormErrorMessage>
         </FormControl>

@@ -192,7 +192,7 @@ const Dashboard = () => {
   return (
     <>
       <Navigation isSignedIn={isSignedIn} />
-      <Box p={4} width="50%">
+      <Box p={4}>
         {userId && idToken && (
           <>
             <Reports
