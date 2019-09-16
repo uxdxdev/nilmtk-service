@@ -6,7 +6,7 @@ const Navigation = ({ isSignedIn }) => {
   return (
     <Flex justifyContent="space-between" alignItems="center" p={4}>
       <Heading as="h1" size="lg" m={0}>
-        Consumo
+        Ecopush
       </Heading>
 
       {isSignedIn && (

@@ -204,7 +204,7 @@ exports.notification = functions.database
     let deviceName = deviceNameSnapshot.val();
     let payload = {
       data: {
-        title: 'Consumo',
+        title: 'Ecopush',
         body: `${deviceName}: ${text}`,
         reportType,
         icon: './favicon.ico',

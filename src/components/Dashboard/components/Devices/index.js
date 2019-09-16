@@ -23,7 +23,7 @@ const Devices = ({ userId, idToken }) => {
         // if device socket does not exist
         if (!(device.key in deviceSockets)) {
           // let socket = new WebSocket(
-          //   `ws://connect.websocket.in/consumo?room_id=${device.key}`
+          //   `ws://connect.websocket.in/ecopush?room_id=${device.key}`
           // );
           // socket.onopen = () => {
           //   socket.send(
