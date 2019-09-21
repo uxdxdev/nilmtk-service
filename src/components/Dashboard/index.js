@@ -37,8 +37,11 @@ const uiConfig = {
     // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
     // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
     // firebase.auth.GithubAuthProvider.PROVIDER_ID,
-    // eslint-disable-next-line no-undef
-    firebase.auth.EmailAuthProvider.PROVIDER_ID
+    {
+      // eslint-disable-next-line no-undef
+      provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+      requireDisplayName: false
+    }
     // firebase.auth.PhoneAuthProvider.PROVIDER_ID
   ]
   // Terms of service url.

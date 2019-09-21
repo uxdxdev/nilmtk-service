@@ -139,12 +139,21 @@ const snapshotToArray = snapshot => {
   return returnArr;
 };
 
-exports.device = functions.https.onRequest(async (req, res) => {
-  validateFirebaseIdToken(req, res);
+const IsJsonString = str => {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+};
 
-  // POST register new device
+exports.device = functions.https.onRequest(async (req, res) => {
   let { method } = req;
   if (method === 'POST') {
+    // POST register new device
+    validateFirebaseIdToken(req, res);
+
     let { body } = req;
     let data = JSON.parse(body);
     if (data) {
@@ -162,8 +171,10 @@ exports.device = functions.https.onRequest(async (req, res) => {
     } else {
       res.status(422).send('Invalid data payload');
     }
-    // GET fetch registered devices
   } else if (method === 'GET') {
+    // GET fetch registered devices
+    validateFirebaseIdToken(req, res);
+
     let { query } = req;
     let { userId } = query;
     if (userId) {
@@ -174,6 +185,48 @@ exports.device = functions.https.onRequest(async (req, res) => {
       res.status(200).send(payload);
     } else {
       res.status(422).send('Invalid payload');
+    }
+  } else if (method === 'PUT') {
+    // PUT create new appliance record or update existing record
+    let { body: data } = req;
+    if (data) {
+      // parse only if JSON string
+      let dataParsed = null;
+      if (IsJsonString(data)) {
+        dataParsed = JSON.parse(data);
+      } else {
+        dataParsed = data;
+      }
+      const { origin, deviceId, applianceId, name } = dataParsed;
+
+      // validate request
+      if (origin === 'device') {
+        validateDeviceSecret(req, res);
+      } else if (origin === 'app') {
+        validateFirebaseIdToken(req, res);
+      }
+
+      if (deviceId && applianceId) {
+        await admin
+          .database()
+          .ref('/devices/' + deviceId + '/appliances')
+          .orderByChild('id')
+          .equalTo(applianceId)
+          .once('value', snapshot => {
+            if (snapshot.hasChildren()) {
+              return snapshot.forEach(child => {
+                child.ref.update({ id: applianceId, name });
+              });
+            } else {
+              return snapshot.ref.push({ id: applianceId, name });
+            }
+          });
+        res.status(200).send('Appliance info updated');
+      } else {
+        res.status(422).send('Invalid payload');
+      }
+    } else {
+      res.status(422).send('Invalid data payload');
     }
   } else {
     res.status(422).send('Invalid request');

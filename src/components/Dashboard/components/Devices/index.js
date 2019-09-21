@@ -11,6 +11,7 @@ import {
   Box,
   Stack
 } from '@chakra-ui/core';
+import Appliance from './components/Appliance';
 
 const Devices = ({ userId, idToken }) => {
   const [devices, setDevices] = useState([]);
@@ -118,7 +119,6 @@ const Devices = ({ userId, idToken }) => {
             if (response.status === 200) {
               deviceNameInput.value = '';
               deviceIdInput.value = '';
-
               fetchDevices(userId, idToken);
             } else {
               throw new Error('Not 200 response');
@@ -135,21 +135,23 @@ const Devices = ({ userId, idToken }) => {
   };
 
   // eslint-disable-next-line no-unused-vars
-  const startDevice = (deviceId, type) => {
-    deviceSockets[deviceId].send(JSON.stringify({ command: 'start', type }));
-  };
+  // const startDevice = (deviceId, type) => {
+  //   deviceSockets[deviceId].send(JSON.stringify({ command: 'start', type }));
+  // };
 
-  const StackItem = ({ text }) => (
-    <Box p={5} shadow="md" borderWidth="1px">
-      {/* <Heading fontSize="xl">{title}</Heading> */}
-      <Text>{text}</Text>
-    </Box>
-  );
+  const DeviceInfo = ({ device }) => {
+    const deviceName = device.deviceName ? `(${device.deviceName})` : '';
+    const text = `${deviceName} ID: ${device.key} `;
+    return (
+      <Box p={5} shadow="md" borderWidth="1px">
+        <Text>{text}</Text>
+      </Box>
+    );
+  };
 
   return (
     <>
       <Heading my={1}>Register Monitoring Device</Heading>
-
       <form>
         <FormControl mb={2} isInvalid={isInvalidDeviceName} isRequired>
           <FormLabel htmlFor="device-name">Device Name</FormLabel>
@@ -187,25 +189,33 @@ const Devices = ({ userId, idToken }) => {
         </FormControl>
       </form>
       <Heading my={1}>Devices</Heading>
-      <Stack>
+      <Stack isInline>
         {devices &&
           devices.map((device, index) => {
-            const deviceName = device.deviceName
-              ? `(${device.deviceName})`
-              : '';
-            return (
-              <StackItem key={index} text={`${device.key} ${deviceName}`} />
-              /* <Button onClick={() => startDevice(device.key, 'main')}>
-                  Main
-                </Button>
-                <Button onClick={() => startDevice(device.key, 'simulate')}>
-                  Simulate
-                </Button> */
-              /* </ListItem> */
-            );
+            return <DeviceInfo key={index} device={device} />;
           })}
       </Stack>
-      {/* </List> */}
+      <Heading my={1}>Appliances</Heading>
+      <Stack isInline>
+        {devices &&
+          devices.map(device => {
+            const { appliances } = device;
+            if (appliances) {
+              return Object.values(appliances).map((appliance, index) => {
+                return (
+                  <Appliance
+                    idToken={idToken}
+                    key={index}
+                    device={device}
+                    appliance={appliance}
+                  />
+                );
+              });
+            } else {
+              return [];
+            }
+          })}
+      </Stack>
     </>
   );
 };
