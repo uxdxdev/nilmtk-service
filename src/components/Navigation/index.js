@@ -4,7 +4,7 @@ import { Flex, Heading, Button } from '@chakra-ui/core';
 
 const Navigation = ({ isSignedIn }) => {
   return (
-    <Flex justifyContent="space-between" alignItems="center" p={4}>
+    <Flex justifyContent="space-between" alignItems="center" m={4}>
       <Heading as="h1" size="lg" m={0}>
         Ecopush
       </Heading>

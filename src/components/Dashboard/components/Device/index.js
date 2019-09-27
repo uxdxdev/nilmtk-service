@@ -12,16 +12,17 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatGroup
+  StatGroup,
+  Spinner
 } from '@chakra-ui/core';
 
 const Device = ({ userId, idToken }) => {
-  const [devices, setDevices] = useState([]);
+  const [devices, setDevices] = useState(undefined);
   // eslint-disable-next-line no-unused-vars
   const [deviceSockets, setDeviceSockets] = useState({});
 
   useEffect(() => {
-    if (devices.length > 0) {
+    if (devices && devices.length > 0) {
       devices.forEach(device => {
         // if device socket does not exist
         if (!(device.key in deviceSockets)) {
@@ -186,10 +187,9 @@ const Device = ({ userId, idToken }) => {
       </Box>
       <Box m={4} p={4} borderWidth="1px" rounded="lg">
         <Heading my={2}>Devices</Heading>
-        {/* <Stack isInline wrap="wrap" align="center"> */}
-        <StatGroup>
-          {devices &&
-            devices.map((device, index) => {
+        {devices ? (
+          <StatGroup>
+            {devices.map((device, index) => {
               const deviceName = device.deviceName
                 ? `${device.deviceName}`
                 : '';
@@ -205,8 +205,10 @@ const Device = ({ userId, idToken }) => {
                 </Stat>
               );
             })}
-          {/* </Stack> */}
-        </StatGroup>
+          </StatGroup>
+        ) : (
+          <Spinner size="xl" borderStyle="solid" />
+        )}
       </Box>
     </>
   );

@@ -37,9 +37,9 @@ const Reports = ({ userId, idToken, newReport }) => {
   return (
     <Box m={4} p={4} borderWidth="1px" rounded="lg">
       <Heading my={2}>Notifications</Heading>
-      <Stack spacing={1}>
-        {reports ? (
-          reports.reverse().map((report, index) => {
+      {reports ? (
+        <Stack spacing={1}>
+          {reports.reverse().map((report, index) => {
             const { reportType, text } = report;
             return (
               <Alert key={index} status={reportType}>
@@ -47,11 +47,11 @@ const Reports = ({ userId, idToken, newReport }) => {
                 {`${text}`}
               </Alert>
             );
-          })
-        ) : (
-          <Spinner size="xl" borderStyle="solid" />
-        )}
-      </Stack>
+          })}
+        </Stack>
+      ) : (
+        <Spinner size="xl" borderStyle="solid" />
+      )}
     </Box>
   );
 };
