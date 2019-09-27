@@ -70,8 +70,23 @@ exports.report = functions.https.onRequest(async (req, res) => {
     validateDeviceSecret(req, res);
     let { body: data } = req;
     if (data) {
-      const { deviceId, text, reportType } = data;
+      const { deviceId, text, reportType, applianceId } = data;
       if (deviceId && text) {
+        if (applianceId) {
+          const appliancesRef = await admin
+            .database()
+            .ref('/devices/' + deviceId + '/appliances');
+
+          const applianceSnapshot = await appliancesRef
+            .orderByChild('id')
+            .equalTo(applianceId)
+            .once('value');
+
+          if (!applianceSnapshot.exists()) {
+            appliancesRef.push({ id: applianceId });
+          }
+        }
+
         await admin
           .database()
           .ref('/devices/' + deviceId + '/reports')

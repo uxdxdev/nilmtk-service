@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as firebaseUtils from '../../utils/firebaseUtils';
 import { useToast, Box } from '@chakra-ui/core';
 import Reports from './components/Reports';
-import Devices from './components/Devices';
+import Device from './components/Device';
 import Navigation from '../Navigation';
 
 // eslint-disable-next-line no-undef
@@ -184,7 +184,7 @@ const Dashboard = () => {
 
   if (!isSignedIn) {
     return (
-      <Box>
+      <Box p={4}>
         <Navigation isSignedIn={isSignedIn} />
         <div id="firebaseui-auth-container" />
         <div id="loader">Loading...</div>
@@ -195,22 +195,12 @@ const Dashboard = () => {
   return (
     <>
       <Navigation isSignedIn={isSignedIn} />
-      <Box p={4}>
-        {userId && idToken && (
-          <>
-            <Reports
-              userId={userId}
-              idToken={idToken}
-              newReport={toastMessage}
-            />
-
-            <Devices userId={userId} idToken={idToken} />
-          </>
-        )}
-
-        {/* <Heading>Service worker token</Heading>
-        <p>{clientToken}</p> */}
-      </Box>
+      {userId && idToken && (
+        <>
+          <Reports userId={userId} idToken={idToken} newReport={toastMessage} />
+          <Device userId={userId} idToken={idToken} />
+        </>
+      )}
     </>
   );
 };

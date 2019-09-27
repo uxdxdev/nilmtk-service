@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { fetchGetRequest } from '../../../../utils';
-import { Stack, Alert, AlertIcon, Spinner } from '@chakra-ui/core';
+import {
+  Stack,
+  Alert,
+  AlertIcon,
+  Spinner,
+  Box,
+  Heading
+} from '@chakra-ui/core';
 
 const Reports = ({ userId, idToken, newReport }) => {
   const [reports, setReports] = useState(undefined);
@@ -28,7 +35,8 @@ const Reports = ({ userId, idToken, newReport }) => {
   }, [idToken, userId]);
 
   return (
-    <>
+    <Box m={4} p={4} borderWidth="1px" rounded="lg">
+      <Heading my={2}>Notifications</Heading>
       <Stack spacing={1}>
         {reports ? (
           reports.reverse().map((report, index) => {
@@ -44,7 +52,7 @@ const Reports = ({ userId, idToken, newReport }) => {
           <Spinner size="xl" borderStyle="solid" />
         )}
       </Stack>
-    </>
+    </Box>
   );
 };
 

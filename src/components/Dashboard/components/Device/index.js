@@ -7,13 +7,15 @@ import {
   FormControl,
   FormLabel,
   FormErrorMessage,
-  Text,
   Box,
-  Stack
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatGroup
 } from '@chakra-ui/core';
-import Appliance from './components/Appliance';
 
-const Devices = ({ userId, idToken }) => {
+const Device = ({ userId, idToken }) => {
   const [devices, setDevices] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [deviceSockets, setDeviceSockets] = useState({});
@@ -139,85 +141,75 @@ const Devices = ({ userId, idToken }) => {
   //   deviceSockets[deviceId].send(JSON.stringify({ command: 'start', type }));
   // };
 
-  const DeviceInfo = ({ device }) => {
-    const deviceName = device.deviceName ? `(${device.deviceName})` : '';
-    const text = `${deviceName} ID: ${device.key} `;
-    return (
-      <Box p={5} shadow="md" borderWidth="1px">
-        <Text>{text}</Text>
-      </Box>
-    );
-  };
-
   return (
     <>
-      <Heading my={1}>Register Monitoring Device</Heading>
-      <form>
-        <FormControl mb={2} isInvalid={isInvalidDeviceName} isRequired>
-          <FormLabel htmlFor="device-name">Device Name</FormLabel>
-          <Input
-            id="device-name"
-            type="text"
-            ref={registerDeviceNameInputRef}
-            placeholder="Enter new device name"
-            size="sm"
-            width="150px"
-          />
-          <FormErrorMessage>{deviceNameInputErrorMessage}</FormErrorMessage>
-        </FormControl>
+      <Box m={4} p={4} borderWidth="1px" rounded="lg">
+        <Heading my={2}>Register Monitoring Device</Heading>
+        <Box m={1}>
+          <form>
+            <FormControl mb={2} isInvalid={isInvalidDeviceName} isRequired>
+              <FormLabel htmlFor="device-name">Device Name</FormLabel>
+              <Input
+                id="device-name"
+                type="text"
+                ref={registerDeviceNameInputRef}
+                placeholder="Enter new device name"
+                size="sm"
+                width="200px"
+              />
+              <FormErrorMessage>{deviceNameInputErrorMessage}</FormErrorMessage>
+            </FormControl>
 
-        <FormControl isInvalid={isInvalidDeviceId} isRequired>
-          <FormLabel htmlFor="device-id">Device ID</FormLabel>
-          <Input
-            id="device-id"
-            type="number"
-            ref={registerDeviceIdInputRef}
-            placeholder="Enter new device ID"
-            size="sm"
-            width="150px"
-          />
-          <FormErrorMessage>{deviceIdInputErrorMessage}</FormErrorMessage>
-        </FormControl>
+            <FormControl isInvalid={isInvalidDeviceId} isRequired>
+              <FormLabel htmlFor="device-id">Device ID</FormLabel>
+              <Input
+                id="device-id"
+                type="number"
+                ref={registerDeviceIdInputRef}
+                placeholder="Enter new device ID"
+                size="sm"
+                width="200px"
+              />
+              <FormErrorMessage>{deviceIdInputErrorMessage}</FormErrorMessage>
+            </FormControl>
 
-        <FormControl isInvalid={hasRegisterFailed}>
-          <Button mt={4} onClick={() => registerDevice(userId, idToken)}>
-            Register
-          </Button>
-          <FormErrorMessage>
-            Error registering device. Please try again later.
-          </FormErrorMessage>
-        </FormControl>
-      </form>
-      <Heading my={1}>Devices</Heading>
-      <Stack isInline>
-        {devices &&
-          devices.map((device, index) => {
-            return <DeviceInfo key={index} device={device} />;
-          })}
-      </Stack>
-      <Heading my={1}>Appliances</Heading>
-      <Stack isInline>
-        {devices &&
-          devices.map(device => {
-            const { appliances } = device;
-            if (appliances) {
-              return Object.values(appliances).map((appliance, index) => {
-                return (
-                  <Appliance
-                    idToken={idToken}
-                    key={index}
-                    device={device}
-                    appliance={appliance}
-                  />
-                );
-              });
-            } else {
-              return [];
-            }
-          })}
-      </Stack>
+            <FormControl isInvalid={hasRegisterFailed}>
+              <Button mt={4} onClick={() => registerDevice(userId, idToken)}>
+                Register
+              </Button>
+              <FormErrorMessage>
+                Error registering device. Please try again later.
+              </FormErrorMessage>
+            </FormControl>
+          </form>
+        </Box>
+      </Box>
+      <Box m={4} p={4} borderWidth="1px" rounded="lg">
+        <Heading my={2}>Devices</Heading>
+        {/* <Stack isInline wrap="wrap" align="center"> */}
+        <StatGroup>
+          {devices &&
+            devices.map((device, index) => {
+              const deviceName = device.deviceName
+                ? `${device.deviceName}`
+                : '';
+              const deviceInfo = `${device.key} `;
+              const { appliances } = device;
+              let numberOfAppliances =
+                (appliances && Object.values(appliances).length) || 0;
+              return (
+                <Stat key={index} borderWidth="1px" p={2} m={1}>
+                  <StatLabel>{deviceName}</StatLabel>
+                  <StatNumber>{deviceInfo}</StatNumber>
+                  <StatHelpText>{`# of Appliances ${numberOfAppliances}`}</StatHelpText>
+                </Stat>
+              );
+            })}
+          {/* </Stack> */}
+        </StatGroup>
+      </Box>
     </>
   );
 };
 
-export default Devices;
+export default Device;

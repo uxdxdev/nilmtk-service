@@ -2,11 +2,17 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './App.css';
 import { Dashboard, NotFound } from './components';
-import { ThemeProvider, theme, ColorModeProvider } from '@chakra-ui/core';
+import {
+  ThemeProvider,
+  theme,
+  ColorModeProvider,
+  CSSReset
+} from '@chakra-ui/core';
 
 const App = () => {
   return (
     <ThemeProvider theme={theme}>
+      <CSSReset />
       <ColorModeProvider value="light">
         <Router>
           <Switch>
