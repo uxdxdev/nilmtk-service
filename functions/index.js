@@ -264,10 +264,12 @@ exports.notification = functions.database
       .ref(`/devices/${deviceId}/deviceName`)
       .once('value', snapshot => snapshot.val());
 
-    let token = await admin
+    let tokensSnapshot = await admin
       .database()
-      .ref(`/users/${userId.val()}/token`)
+      .ref(`/users/${userId.val()}/tokens`)
       .once('value', snapshot => snapshot.val());
+
+    let tokens = snapshotToArray(tokensSnapshot);
 
     let deviceName = deviceNameSnapshot.val();
     let payload = {
@@ -280,7 +282,7 @@ exports.notification = functions.database
       }
     };
 
-    return admin.messaging().sendToDevice(token.val(), payload);
+    return admin.messaging().sendToDevice(tokens, payload);
   });
 
 exports.account = functions.auth.user().onCreate(event => {

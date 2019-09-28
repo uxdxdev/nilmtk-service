@@ -59,11 +59,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (toastMessage) {
-      const { title, text } = toastMessage;
+      const { title, text, reportType } = toastMessage;
       toast({
         title,
         description: text,
-        status: 'success',
+        status: reportType,
         duration: 9000,
         isClosable: true
       });
@@ -121,8 +121,8 @@ const Dashboard = () => {
       // eslint-disable-next-line no-undef
       firebase
         .database()
-        .ref('/users/' + uid)
-        .update({ token });
+        .ref('/users/' + uid + '/tokens')
+        .push({ token });
     };
 
     const initFcm = () => {
