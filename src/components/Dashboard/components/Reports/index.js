@@ -42,7 +42,7 @@ const Reports = ({ userId, idToken, newReport }) => {
           {reports.reverse().map((report, index) => {
             const { reportType, text } = report;
             return (
-              <Alert key={index} status={reportType}>
+              <Alert key={index} status={reportType} variant="left-accent">
                 <AlertIcon />
                 {`${text}`}
               </Alert>

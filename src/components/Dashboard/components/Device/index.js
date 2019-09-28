@@ -186,7 +186,7 @@ const Device = ({ userId, idToken }) => {
         </Box>
       </Box>
       <Box m={4} p={4} borderWidth="1px" rounded="lg">
-        <Heading my={2}>Devices</Heading>
+        <Heading my={2}>Monitoring Devices</Heading>
         {devices ? (
           <StatGroup>
             {devices.map((device, index) => {
@@ -200,8 +200,8 @@ const Device = ({ userId, idToken }) => {
               return (
                 <Stat key={index} borderWidth="1px" p={2} m={1}>
                   <StatLabel>{deviceName}</StatLabel>
-                  <StatNumber>{deviceInfo}</StatNumber>
-                  <StatHelpText>{`# of Appliances ${numberOfAppliances}`}</StatHelpText>
+                  <StatNumber>{`${numberOfAppliances} Appliances`}</StatNumber>
+                  <StatHelpText>{deviceInfo}</StatHelpText>
                 </Stat>
               );
             })}
