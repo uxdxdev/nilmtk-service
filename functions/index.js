@@ -270,6 +270,7 @@ exports.notification = functions.database
       .once('value', snapshot => snapshot.val());
 
     let tokens = snapshotToArray(tokensSnapshot);
+    tokens = tokens.map(obj => obj.token);
 
     let deviceName = deviceNameSnapshot.val();
     let payload = {

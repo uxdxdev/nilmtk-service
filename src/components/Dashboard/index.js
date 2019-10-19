@@ -117,12 +117,20 @@ const Dashboard = () => {
   const [userId, setUid] = useState(undefined);
 
   useEffect(() => {
-    const saveClientTokenToDB = (uid, token) => {
+    const saveClientTokenToDB = async (uid, token) => {
       // eslint-disable-next-line no-undef
-      firebase
+      const tokensRef = await firebase
         .database()
-        .ref('/users/' + uid + '/tokens')
-        .push({ token });
+        .ref('/users/' + uid + '/tokens');
+
+      const tokenSnapshot = await tokensRef
+        .orderByChild('token')
+        .equalTo(token)
+        .once('value');
+
+      if (!tokenSnapshot.exists()) {
+        tokensRef.push({ token });
+      }
     };
 
     const initFcm = () => {
@@ -130,11 +138,10 @@ const Dashboard = () => {
         .requestPermission()
         .then(async () => {
           const token = await firebaseUtils.messaging.getToken();
-
           setClientToken(token);
           saveClientTokenToDB(userId, token);
         })
-        .catch(err => {});
+        .catch(err => console.log(err));
     };
 
     if (isSignedIn && clientToken === undefined) {
