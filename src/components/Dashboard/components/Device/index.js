@@ -129,7 +129,7 @@ const Device = ({ userId, idToken }) => {
           })
           .catch(error => {
             setHasRegisterFailed(true);
-            console.log(error);
+            console.log('registerDevice error', error);
           });
       } else {
         console.log('registerDevice error', uid, token, id);

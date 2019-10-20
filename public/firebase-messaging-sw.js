@@ -5,7 +5,7 @@ importScripts('/__/firebase/init.js');
 
 const messaging = firebase.messaging();
 
-messaging.setBackgroundMessageHandler(payload => {
+messaging.setBackgroundMessageHandler(async payload => {
   const { data } = payload;
   const { title, body, icon, link } = data;
   const notificationOptions = {
@@ -13,6 +13,19 @@ messaging.setBackgroundMessageHandler(payload => {
     icon,
     data: link
   };
+
+  // eslint-disable-next-line no-restricted-globals
+  const allClients = await self.clients.matchAll({
+    includeUncontrolled: true
+  });
+
+  for (var client of allClients) {
+    client.postMessage({
+      'firebase-messaging-msg-data': {
+        data
+      }
+    });
+  }
 
   // eslint-disable-next-line no-restricted-globals
   return self.registration.showNotification(title, notificationOptions);
