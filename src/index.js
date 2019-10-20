@@ -11,14 +11,5 @@ ReactDOM.render(<App />, document.getElementById('root'));
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 // serviceWorker.unregister();
-const config = {
-  onUpdate: () => {
-    console.log('Reloading page to get latest updates.');
-    window.location.reload();
-  },
-  onSuccess: () => {
-    console.log('Successful registration');
-  }
-};
-serviceWorker.register(config);
+serviceWorker.register();
 firebaseUtils.registerServiceWorker();
