@@ -13,7 +13,7 @@ ReactDOM.render(<App />, document.getElementById('root'));
 // serviceWorker.unregister();
 const config = {
   onUpdate: registration => {
-    console.log('new content available');
+    console.log('new content available, page reloading...');
     window.location.reload();
   }
 };
