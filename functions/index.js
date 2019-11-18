@@ -383,7 +383,7 @@ exports.summary_notification = functions.database
       data: {
         title: 'Ecopush',
         body: `${deviceName}: ${text}`,
-        reportType,
+        reportType: 'info',
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'
       }
