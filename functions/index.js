@@ -375,9 +375,9 @@ exports.summary_notification = functions.database
     let deviceName = deviceNameSnapshot.val();    
     let text = ''
     if(percentageChange < 0){
-      text = `Your ${applianceId} used ${abs(percentageChange)}% less energy today compared to yesterday :). Well done! Your conserving energy! Keep it up!.`
+      text = `Your ${applianceId} used ${Math.abs(percentageChange)}% less energy today compared to yesterday :). Well done! Your conserving energy! Keep it up!.`
     } else {
-      text = `Your ${applianceId} used ${abs(percentageChange)}% more energy today compared to yesterday :(.`
+      text = `Your ${applianceId} used ${Math.abs(percentageChange)}% more energy today compared to yesterday :(.`
     }
     let payload = {
       data: {
