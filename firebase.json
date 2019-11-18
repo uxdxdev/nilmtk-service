@@ -16,6 +16,10 @@
         "function": "report"
       },
       {
+        "source": "/api/summary",
+        "function": "summary"
+      },
+      {
         "source": "/",
         "destination": "/index.html"
       }
