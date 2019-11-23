@@ -297,59 +297,25 @@ exports.account = functions.auth.user().onCreate(event => {
 });
 
 exports.summary = functions.https.onRequest(async (req, res) => {
-  // POST create new report
   let { method } = req;
   if (method === 'POST') {
     validateDeviceSecret(req, res);
     let { body: data } = req;
     let { summary } = data;
-    console.log(JSON.stringify(summary))
     if (summary) {   
-        let { deviceId, date } = summary;
-        await admin.database().ref('/devices/' + deviceId + '/summaries/' + date).push(summary);
+        let { deviceId, date, applianceId } = summary;
+        await admin.database().ref('/devices/' + deviceId + '/summaries/' + date + '/' + applianceId).set(summary);
         res.status(200).send('Report received');      
     } else {
       res.status(422).send('Invalid data');
     }
-    // GET fetch reports
-  } else if (method === 'GET') {
-    // validateFirebaseIdToken(req, res);
-    // let { query } = req;
-    // let { userId } = query;
-    // if (userId) {
-    //   let deviceObjects = await fetchDevicesByUserId(userId);
-
-    //   let payload = [];
-    //   snapshotToArray(deviceObjects)
-    //     .map(device => {
-    //       return { reports: device.reports, name: device.deviceName };
-    //     })
-    //     .forEach(result => {
-    //       const { name } = result;
-    //       if (result.reports !== undefined) {
-    //         Object.values(result.reports).forEach(report => {
-    //           payload.push({
-    //             reportType: report.reportType,
-    //             text: `${name}: ${report.text}`
-    //           });
-    //         });
-    //       }
-    //     });
-
-    //   // only return the latest n reports
-    //   payload = payload.slice(-5);
-    //   res.status(200).send(payload);
-    // } else {
-    //   res.status(422).send('Invalid payload');
-    // }
-    res.status(422).send('Not implemented');
   } else {
     res.status(422).send('Invalid request');
   }
 });
 
 exports.summary_notification = functions.database
-  .ref('/devices/{deviceId}/summaries/{date}')
+  .ref('/devices/{deviceId}/summaries/{date}/{applianceId}')
   .onWrite(async (change, context) => {
     const summary = change.after.val();
     const { applianceId, change: percentageChange } = summary;
@@ -374,16 +340,19 @@ exports.summary_notification = functions.database
 
     let deviceName = deviceNameSnapshot.val();    
     let text = ''
+    let reportType = 'info'
     if(percentageChange < 0){
       text = `Your ${applianceId} used ${Math.abs(percentageChange)}% less energy today compared to yesterday :). Well done! Your conserving energy! Keep it up!.`
+      reportType = 'success'
     } else {
       text = `Your ${applianceId} used ${Math.abs(percentageChange)}% more energy today compared to yesterday :(.`
+      reportType = 'error'
     }
     let payload = {
       data: {
         title: 'Ecopush',
         body: `${deviceName}: ${text}`,
-        reportType: 'info',
+        reportType,
         icon: './favicon.ico',
         link: 'https://nilmtk-service.firebaseapp.com'
       }
