@@ -119,23 +119,15 @@ const Dashboard = () => {
   useEffect(() => {
     const saveClientTokenToDB = async (uid, token) => {
       // eslint-disable-next-line no-undef
-      const tokensRef = await firebase
-        .database()
-        .ref('/users/' + uid + '/tokens');
-
-      const tokenSnapshot = await tokensRef
-        .orderByChild('token')
-        .equalTo(token)
-        .once('value');
-
+      const tokensRef = await firebase.database().ref('/users/' + uid + '/tokens');
+      const tokenSnapshot = await tokensRef.orderByChild('token').equalTo(token).once('value');
       if (!tokenSnapshot.exists()) {
         tokensRef.push({ token });
       }
     };
 
     const initFcm = () => {
-      firebaseUtils.messaging
-        .requestPermission()
+      firebaseUtils.messaging.requestPermission()
         .then(async () => {
           const token = await firebaseUtils.messaging.getToken();
           setClientToken(token);
@@ -154,9 +146,7 @@ const Dashboard = () => {
   useEffect(() => {
     const initIdToken = () => {
       // eslint-disable-next-line no-undef
-      firebase
-        .auth()
-        .currentUser.getIdToken(/* forceRefresh */ true)
+      firebase.auth().currentUser.getIdToken(/* forceRefresh */ true)
         .then(idToken => {
           // Send token to your backend via HTTPS
 
